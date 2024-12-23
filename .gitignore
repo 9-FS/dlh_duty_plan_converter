@@ -1,0 +1,12 @@
+*.exe
+*.log
+*.token
+
+/calendar/
+/config/
+/db/
+/doc_templates/
+/log/
+/target/
+
+docker-image.tar

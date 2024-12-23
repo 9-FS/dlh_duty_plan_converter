@@ -1,0 +1,35 @@
+[package]
+authors     = ["9-FS <pray4spam@googlemail.com>"]
+categories  = []
+description = ""
+edition     = "2021"
+exclude     = [".github/", "readme.pdf"]                        # additional to .gitignore
+keywords    = []
+license     = "MIT"
+name        = "dlh_duty_plan_converter"
+readme      = "readme.md"
+repository  = "https://github.com/9-FS/dlh_duty_plan_converter"
+version     = "1.0.0"
+
+[dependencies]
+chrono = { version = "^0.4.0", default-features = false }
+csv = "^1.0.0"
+futures = { version = "^0.3.0", default-features = false }
+icalendar = "^0.16.0"
+load_config = { git = "https://github.com/9-FS/load_config", tag = "1.2.1", features = [
+    "toml_file",
+] }
+log = "^0.4.0"
+regex = "^1.0.0"
+reqwest = { version = "^0.12.0", default-features = false, features = [
+    "rustls-tls",
+] }
+serde = { version = "^1.0.0", features = ["derive"] }
+setup_logging = { git = "https://github.com/9-FS/setup_logging", tag = "2.1.0" }
+sqlx = { version = "^0.8.0", features = ["runtime-tokio-rustls", "sqlite"] }
+thiserror = "^2.0.0"
+tokio = { version = "^1.0.0", features = ["rt-multi-thread"] }
+
+[lints.clippy]
+needless_late_init = "allow"
+needless_return    = "allow"
