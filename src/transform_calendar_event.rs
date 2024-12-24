@@ -22,8 +22,8 @@ pub async fn transform_briefing(mut calendar_event: icalendar::Event, db: &sqlx:
             calendar_event.location(format!("{}: {}, {}", s, row.country_name, row.airport_name).as_str()); // change iata location to icao location
         }
     } // otherwise just keep original data
-    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::seconds(-4000))); // add alarm at -4 ks
-    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::seconds(-500))); // add alarm at -500 s
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-90))); // add alarm at -1.5 h
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-5))); // add alarm at -5 min
 
     return calendar_event;
 }
@@ -49,8 +49,8 @@ pub async fn transform_deadhead(mut calendar_event: icalendar::Event, flight_iat
             calendar_event.location(format!("{}: {}, {}", s, row.country_name, row.airport_name).as_str()); // change iata location to icao location
         }
     } // otherwise just keep original data
-    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::seconds(-4000))); // add alarm at -4 ks
-    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::seconds(-2000))); // add alarm at -2 ks
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::hours(-2))); // add alarm at -2 h
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-35))); // add alarm at -35 min
 
     return calendar_event;
 }
@@ -76,7 +76,7 @@ pub async fn transform_flight(mut calendar_event: icalendar::Event, flight_iata:
             calendar_event.location(format!("{}: {}, {}", s, row.country_name, row.airport_name).as_str()); // change iata location to icao location
         }
     } // otherwise just keep original data
-    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::seconds(-1000))); // add alarm at -1 ks
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-30))); // add alarm at -15 min
 
     return calendar_event;
 }
@@ -100,8 +100,8 @@ pub async fn transform_ground(mut calendar_event: icalendar::Event, category: St
     {
         calendar_event.location(format!("{}, {}", row.country_name, row.airport_municipality).as_str()); // change iata location to country and city
     } // otherwise just keep original data
-    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::seconds(-4000))); // add alarm at -4 ks
-    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::seconds(-500))); // add alarm at -500 s
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-90))); // add alarm at -1.5 h
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-5))); // add alarm at -5 min
 
     return calendar_event;
 }
@@ -124,8 +124,8 @@ pub async fn transform_layover(mut calendar_event: icalendar::Event, db: &sqlx::
     {
         calendar_event.location(format!("{}, {}", row.country_name, row.airport_municipality).as_str()); // change iata location to country and city
     } // otherwise just keep original data
-    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), (chrono::Duration::seconds(-4000), icalendar::Related::End))); // add alarm at -4 ks before layover end, at layover end briefing begins
-    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), (chrono::Duration::seconds(-500), icalendar::Related::End))); // add alarm at -500 s before layover end, at layover end briefing begins
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), (chrono::Duration::minutes(-90), icalendar::Related::End))); // add alarm at -1.5 h before layover end, at layover end briefing begins
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), (chrono::Duration::minutes(-5), icalendar::Related::End))); // add alarm at -5 min before layover end, at layover end briefing begins
 
     return calendar_event;
 }
