@@ -4,10 +4,10 @@ use sqlx::migrate::MigrateDatabase;
 
 
 /// # Summary
-/// Creates a new database or connects to an existing one at `database_url`, runs the instructions in `migrations_path`, and returns a connection pool.
+/// Creates a new database or connects to an existing one at `db_url`, runs the instructions in `migrations_path`, and returns a connection pool.
 ///
 /// # Arguments
-/// - `database_url`: url to database file, might not be local but is recommended to be so
+/// - `db_url`: url to database file, might not be local but is recommended to be so
 /// - `migrations_path`: path to directory containing migration files
 ///
 /// # Returns
