@@ -6,10 +6,10 @@ services:
             HOST_OS: "Unraid"
             TZ: "UTC"
         volumes:
+            - "/mnt/user/appdata/dlh_duty_plan_converter/calendar/:/app/calendar/:rw"
             - "/mnt/user/appdata/dlh_duty_plan_converter/config/:/app/config/:rw"
             - "/mnt/user/appdata/dlh_duty_plan_converter/db/:/app/db/:rw"
             - "/mnt/user/appdata/dlh_duty_plan_converter/log/:/app/log/:rw"
-            - "/mnt/user/nextcloud/Koo Felix/files/Programming/2024-12-20 dlh_duty_plan_converter/calendar/:/app/calendar/:rw"
         user: "99:100"
         network_mode: "bridge"
         deploy:
