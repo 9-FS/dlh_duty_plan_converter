@@ -11,11 +11,10 @@ use crate::error::*;
 /// # Arguments
 /// - `airport_data_url`: airport data source URL
 /// - `db_url`: database URL
-/// - `db_migrations_path`: database migrations path
 ///
 /// # Returns
 /// - nothing or error
-pub async fn update_airport_data(airport_data_url: &str, db_url: &str, db_migrations_path: &str) -> Result<(), UpdateAirportDataError>
+pub async fn update_airport_data(airport_data_url: &str, db_url: &str) -> Result<(), UpdateAirportDataError>
 {
     const AIRPORT_QUERY_STRING: &str = "INSERT OR REPLACE INTO Airport (id, ident, type, name, latitude_deg, longitude_deg, elevation_ft, continent, iso_country, iso_region, municipality, scheduled_service, gps_code, iata_code, local_code, home_link, wikipedia_link, keywords) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"; // query string for Airport table
     let mut airports: Vec<AirportDownloadResponse> = std::vec::Vec::new(); // all airports
@@ -35,7 +34,7 @@ pub async fn update_airport_data(airport_data_url: &str, db_url: &str, db_migrat
     log::debug!("Parsed {} airports.", airports.len());
 
 
-    db = connect_to_db(db_url, db_migrations_path).await?; // connect to database
+    db = connect_to_db(db_url).await?; // connect to database
     let db_ref: &sqlx::Pool<sqlx::Sqlite> = &db; // reference to database for async closure
     futures::stream::iter(airports).for_each_concurrent(2, |airport| async move
     {
@@ -76,11 +75,10 @@ pub async fn update_airport_data(airport_data_url: &str, db_url: &str, db_migrat
 /// # Arguments
 /// - `country_data_url`: country data source URL
 /// - `db_url`: database URL
-/// - `db_migrations_path`: database migrations path
 ///
 /// # Returns
 /// - nothing or error
-pub async fn update_country_data(country_data_url: &str, db_url: &str, db_migrations_path: &str) -> Result<(), UpdateCountryDataError>
+pub async fn update_country_data(country_data_url: &str, db_url: &str) -> Result<(), UpdateCountryDataError>
 {
     const COUNTRY_QUERY_STRING: &str = "INSERT OR REPLACE INTO Country (id, code, name, continent, wikipedia_link, keywords) VALUES (?, ?, ?, ?, ?, ?);"; // query string for Country table
     let mut countries: Vec<CountryDownloadResponse> = std::vec::Vec::new(); // all countries
@@ -100,7 +98,7 @@ pub async fn update_country_data(country_data_url: &str, db_url: &str, db_migrat
     log::debug!("Parsed {} countries.", countries.len());
 
 
-    db = connect_to_db(db_url, db_migrations_path).await?; // connect to database
+    db = connect_to_db(db_url).await?; // connect to database
     let db_ref: &sqlx::Pool<sqlx::Sqlite> = &db; // reference to database for async closure
     futures::stream::iter(countries).for_each_concurrent(2, |country| async move
     {

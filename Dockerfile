@@ -7,7 +7,6 @@ RUN cargo build --release
 
 FROM gcr.io/distroless/cc
 WORKDIR "/app/"
-COPY --from=builder "/app/db_migrations/" "./db_migrations/"
 COPY --from=builder "/app/target/release/dlh_duty_plan_converter" "."
 
 CMD ["./dlh_duty_plan_converter"]
