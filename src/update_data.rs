@@ -60,7 +60,10 @@ pub async fn update_airport_data(airport_data_url: &str, db_url: &str) -> Result
             .bind(airport.home_link)
             .bind(airport.wikipedia_link)
             .bind(airport.keywords);
-        query.execute(db_ref).await.expect("TODO"); // execute query
+        if let Err(e) = query.execute(db_ref).await // execute query
+        {
+            log::warn!("Inserting airport data into database failed with: {e}"); // only warn don't return to try to update other airports
+        }
     }).await;
     db.close().await; // close database connection
     log::info!("Updated airport database.");
@@ -112,7 +115,10 @@ pub async fn update_country_data(country_data_url: &str, db_url: &str) -> Result
             .bind(format!("{:?}", country.continent))
             .bind(country.wikipedia_link)
             .bind(country.keywords);
-        query.execute(db_ref).await.expect("TODO"); // execute query
+        if let Err(e) = query.execute(db_ref).await // execute query
+        {
+            log::warn!("Inserting country data into database failed with: {e}"); // only warn don't return to try to update other countries
+        }
     }).await;
     db.close().await; // close database connection
     log::info!("Updated country database.");
