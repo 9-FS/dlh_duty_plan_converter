@@ -151,6 +151,30 @@ pub fn transform_off(mut calendar_event: icalendar::Event) -> icalendar::Event
 
 
 /// # Summary
+/// Transforms the pickup event. Additionally to the minimum actions changes summary to "Pickup", changes IATA location to ICAO location, and adds alarms at -1 h and -15 min.
+///
+/// # Arguments
+/// - `calendar_event`: the calendar event to transform
+/// - `db`: airport database
+///
+/// # Returns
+/// - the transformed calendar event
+pub async fn transform_pickup(mut calendar_event: icalendar::Event, db: &sqlx::sqlite::SqlitePool) -> icalendar::Event
+{
+    calendar_event = transform_unknown(calendar_event); // always do minimum before specific actions
+    calendar_event.summary("Pickup");
+    if let Some(row) = lookup_iata(calendar_event.get_location().unwrap_or_default().to_owned(), db).await // if iata location found
+    {
+        calendar_event.location(format!("{}, {}", row.country_name, row.airport_municipality).as_str()); // change iata location to country and city
+    } // otherwise just keep original data
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::hours(-1))); // add alarm at -1 h
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-15))); // add alarm at -15 min
+
+    return calendar_event;
+}
+
+
+/// # Summary
 /// Transforms an unknown event. Only does the minimum: removes the unnecessary description.
 ///
 /// # Arguments

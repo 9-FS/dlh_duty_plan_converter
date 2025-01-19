@@ -32,6 +32,7 @@ pub async fn update_calendar(input_calendar_url: &str, output_calendar_filepath:
                     DutyPlanEvent::Ground {category, description} => {output_calendar.push(transform_ground(calendar_event, category, description, &db).await);},
                     DutyPlanEvent::Layover => {output_calendar.push(transform_layover(calendar_event, &db).await);},
                     DutyPlanEvent::Off => {output_calendar.push(transform_off(calendar_event));},
+                    DutyPlanEvent::Pickup => {output_calendar.push(transform_pickup(calendar_event, &db).await);},
                     DutyPlanEvent::Unknown => {output_calendar.push(transform_unknown(calendar_event));},
                 }
             },

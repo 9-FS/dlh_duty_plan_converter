@@ -12,6 +12,7 @@ pub enum DutyPlanEvent
     Ground {category: String, description: String}, // ground event like simulator, classroom
     Layover, // layover somewhere else
     Off, // free day
+    Pickup, // hotel pickup
     Unknown, // unknown events with no specially defined behaviour, only do minimum
 }
 
@@ -33,6 +34,7 @@ impl DutyPlanEvent
         const GROUND_PATTERN: &str = r"^((?P<category>GeneralEvent|Mandatory Training|Simulator) \((?P<description>.+)\))$";
         const LAYOVER_PATTERN: &str = r"^(LAYOVER)$";
         const OFF_PATTERN: &str = r"^(Off Day \(ORTSTAG\)|Off Day \(OFF\))$";
+        const PICKUP_PATTERN: &str = r"^(\d{2}:\d{2} LT Pickup [A-Z]{3})$";
 
 
         if regex::Regex::new(BRIEFING_PATTERN).expect("Compiling briefing regex failed.").is_match(calendar_event_summary.as_str())
@@ -63,6 +65,10 @@ impl DutyPlanEvent
         else if regex::Regex::new(OFF_PATTERN).expect("Compiling off regex failed.").is_match(calendar_event_summary.as_str())
         {
             return Self::Off;
+        }
+        else if regex::Regex::new(PICKUP_PATTERN).expect("Compiling pickup regex failed.").is_match(calendar_event_summary.as_str())
+        {
+            return Self::Pickup;
         }
         else // if nothing matches: only do minimum
         {

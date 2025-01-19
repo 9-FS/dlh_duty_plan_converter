@@ -35,6 +35,7 @@ pub async fn update_airport_data(airport_data_url: &str, db_url: &str) -> Result
 
 
     db = connect_to_db(db_url).await?; // connect to database
+    log::info!("Updating airport database...");
     let db_ref: &sqlx::Pool<sqlx::Sqlite> = &db; // reference to database for async closure
     futures::stream::iter(airports).for_each_concurrent(2, |airport| async move
     {
@@ -102,6 +103,7 @@ pub async fn update_country_data(country_data_url: &str, db_url: &str) -> Result
 
 
     db = connect_to_db(db_url).await?; // connect to database
+    log::info!("Updating country database...");
     let db_ref: &sqlx::Pool<sqlx::Sqlite> = &db; // reference to database for async closure
     futures::stream::iter(countries).for_each_concurrent(2, |country| async move
     {
