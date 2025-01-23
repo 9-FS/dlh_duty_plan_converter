@@ -34,6 +34,7 @@ pub async fn update_calendar(input_calendar_url: &str, output_calendar_filepath:
                     DutyPlanEvent::Off => {output_calendar.push(transform_off(calendar_event));},
                     DutyPlanEvent::Pickup => {output_calendar.push(transform_pickup(calendar_event, &db).await);},
                     DutyPlanEvent::Unknown => {output_calendar.push(transform_unknown(calendar_event));},
+                    DutyPlanEvent::Vacation => {output_calendar.push(transform_vacation(calendar_event));},
                 }
             },
             _ => {output_calendar.push(calendar_component);}, // if not event: forward unchanged
