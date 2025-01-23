@@ -108,6 +108,24 @@ pub async fn transform_ground(mut calendar_event: icalendar::Event, category: St
 
 
 /// # Summary
+/// Transforms the holiday event. Additionally to the minimum actions changes summary to "Holiday".
+///
+/// # Arguments
+/// - `calendar_event`: the calendar event to transform
+///
+/// # Returns
+/// - the transformed calendar event
+pub fn transform_holiday(mut calendar_event: icalendar::Event) -> icalendar::Event
+{
+    calendar_event = transform_unknown(calendar_event); // always do minimum before specific actions
+    calendar_event.location(""); // holiday does not need a location
+    calendar_event.summary("Holiday");
+
+    return calendar_event;
+}
+
+
+/// # Summary
 /// Transforms the layover event. Additionally to the minimum actions changes summary to "Layover" and changes IATA location to ICAO location.
 ///
 /// # Arguments
@@ -185,24 +203,6 @@ pub async fn transform_pickup(mut calendar_event: icalendar::Event, db: &sqlx::s
 pub fn transform_unknown(mut calendar_event: icalendar::Event) -> icalendar::Event
 {
     calendar_event.description(""); // remove unnecessary description from mytime
-
-    return calendar_event;
-}
-
-
-/// # Summary
-/// Transforms the vacation event. Additionally to the minimum actions changes summary to "Vacation".
-///
-/// # Arguments
-/// - `calendar_event`: the calendar event to transform
-///
-/// # Returns
-/// - the transformed calendar event
-pub fn transform_vacation(mut calendar_event: icalendar::Event) -> icalendar::Event
-{
-    calendar_event = transform_unknown(calendar_event); // always do minimum before specific actions
-    calendar_event.location(""); // vacation day does not need a location
-    calendar_event.summary("Vacation");
 
     return calendar_event;
 }

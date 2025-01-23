@@ -30,11 +30,11 @@ pub async fn update_calendar(input_calendar_url: &str, output_calendar_filepath:
                     DutyPlanEvent::Deadhead {flight_iata, departure_iata, destination_iata} => {output_calendar.push(transform_deadhead(calendar_event, flight_iata, departure_iata, destination_iata, &db).await);},
                     DutyPlanEvent::Flight {flight_iata, departure_iata, destination_iata} => {output_calendar.push(transform_flight(calendar_event, flight_iata, departure_iata, destination_iata, &db).await);},
                     DutyPlanEvent::Ground {category, description} => {output_calendar.push(transform_ground(calendar_event, category, description, &db).await);},
+                    DutyPlanEvent::Holiday => {output_calendar.push(transform_holiday(calendar_event));},
                     DutyPlanEvent::Layover => {output_calendar.push(transform_layover(calendar_event, &db).await);},
                     DutyPlanEvent::Off => {output_calendar.push(transform_off(calendar_event));},
                     DutyPlanEvent::Pickup => {output_calendar.push(transform_pickup(calendar_event, &db).await);},
                     DutyPlanEvent::Unknown => {output_calendar.push(transform_unknown(calendar_event));},
-                    DutyPlanEvent::Vacation => {output_calendar.push(transform_vacation(calendar_event));},
                 }
             },
             _ => {output_calendar.push(calendar_component);}, // if not event: forward unchanged
