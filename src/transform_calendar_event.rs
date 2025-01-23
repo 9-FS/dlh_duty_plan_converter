@@ -3,7 +3,7 @@ use icalendar::{Component, EventLike};
 
 
 /// # Summary
-/// Transforms the briefing event. Additionally to the minimum actions changes summary to "Briefing", changes IATA location to ICAO location, and adds alarms at -1,5 h and -5 min.
+/// Transforms the briefing event. Additionally to the minimum actions changes summary to "Briefing", changes IATA location to ICAO location, and adds alarms at -1,5 h, -1 h, and -15 min.
 ///
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
@@ -22,8 +22,9 @@ pub async fn transform_briefing(mut calendar_event: icalendar::Event, db: &sqlx:
             calendar_event.location(format!("{}: {}, {}", s, row.country_name, row.airport_name).as_str()); // change iata location to icao location
         }
     } // otherwise just keep original data
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(90))); // add alarm at -1,5 h
     calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::hours(-1))); // add alarm at -1 h
-    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-5))); // add alarm at -5 min
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-15))); // add alarm at -15 min
 
     return calendar_event;
 }
@@ -83,7 +84,7 @@ pub async fn transform_flight(mut calendar_event: icalendar::Event, flight_iata:
 
 
 /// # Summary
-/// Transforms the ground event. Additionally to the minimum actions changes summary format, changes IATA locations to ICAO location only, and adds alarms at -1 h and -5 min.
+/// Transforms the ground event. Additionally to the minimum actions changes summary format, changes IATA locations to ICAO location only, and adds alarms at -1 h and -15 min.
 ///
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
@@ -101,7 +102,7 @@ pub async fn transform_ground(mut calendar_event: icalendar::Event, category: St
         calendar_event.location(format!("{}, {}", row.country_name, row.airport_municipality).as_str()); // change iata location to country and city
     } // otherwise just keep original data
     calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::hours(-1))); // add alarm at -1 h
-    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-5))); // add alarm at -5 min
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-15))); // add alarm at -15 min
 
     return calendar_event;
 }
@@ -142,9 +143,6 @@ pub async fn transform_layover(mut calendar_event: icalendar::Event, db: &sqlx::
     {
         calendar_event.location(format!("{}, {}", row.country_name, row.airport_municipality).as_str()); // change iata location to country and city
     } // otherwise just keep original data
-    // calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), (chrono::Duration::minutes(-90), icalendar::Related::End))); // add alarm at -1.5 h before layover end, at layover end briefing begins
-    // calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), (chrono::Duration::minutes(-5), icalendar::Related::End))); // add alarm at -5 min before layover end, at layover end briefing begins
-    // icalender::Related::End is ignored by Google Calendar, so alarms are commented out
 
     return calendar_event;
 }
