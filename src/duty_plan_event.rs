@@ -14,6 +14,7 @@ pub enum DutyPlanEvent
     Layover, // layover somewhere else
     Off, // free day
     Pickup, // hotel pickup
+    Sickness, // sickness
     Unknown, // unknown events with no specially defined behaviour, only do minimum
 }
 
@@ -37,6 +38,7 @@ impl DutyPlanEvent
         const LAYOVER_PATTERN: &str = r"^(LAYOVER)$";
         const OFF_PATTERN: &str = r"^(Off Day \(ORTSTAG\)|Off Day \(OFF\))$";
         const PICKUP_PATTERN: &str = r"^(\d{2}:\d{2} LT Pickup [A-Z]{3})$";
+        const SICKNESS_PATTERN: &str = r"^(Sickness \(K(O)?\))$";
 
 
         if regex::Regex::new(BRIEFING_PATTERN).expect("Compiling briefing regex failed.").is_match(calendar_event_summary.as_str())
@@ -75,6 +77,10 @@ impl DutyPlanEvent
         else if regex::Regex::new(PICKUP_PATTERN).expect("Compiling pickup regex failed.").is_match(calendar_event_summary.as_str())
         {
             return Self::Pickup;
+        }
+        else if regex::Regex::new(SICKNESS_PATTERN).expect("Compiling sickness regex failed.").is_match(calendar_event_summary.as_str())
+        {
+            return Self::Sickness;
         }
         else // if nothing matches: only do minimum
         {

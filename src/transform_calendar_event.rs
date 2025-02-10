@@ -207,6 +207,24 @@ pub fn transform_unknown(mut calendar_event: icalendar::Event) -> icalendar::Eve
 
 
 /// # Summary
+/// Transforms a sick day. Additionally to the minimum actions changes summary to "Sickness".
+///
+/// # Arguments
+/// - `calendar_event`: the calendar event to transform
+///
+/// # Returns
+/// - the transformed calendar event
+pub fn transform_sickness(mut calendar_event: icalendar::Event) -> icalendar::Event
+{
+    calendar_event = transform_unknown(calendar_event); // always do minimum before specific actions
+    calendar_event.location(""); // sickness does not need a location
+    calendar_event.summary("Sickness");
+
+    return calendar_event;
+}
+
+
+/// # Summary
 /// Takes an IATA location and tries to get the ICAO location, country, and airport name. If no entry could be found, returns None.
 ///
 /// # Arguments
