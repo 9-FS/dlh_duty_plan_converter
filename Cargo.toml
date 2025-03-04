@@ -2,14 +2,14 @@
 authors     = ["9-FS <pray4spam@googlemail.com>"]
 categories  = []
 description = ""
-edition     = "2021"
+edition     = "2024"
 exclude     = [".github/", "readme.pdf"]                        # additional to .gitignore
 keywords    = []
 license     = "MIT"
 name        = "dlh_duty_plan_converter"
 readme      = "readme.md"
 repository  = "https://github.com/9-FS/dlh_duty_plan_converter"
-version     = "1.4.0"
+version     = "1.5.0"
 
 [dependencies]
 chrono = { version = "^0.4.0", default-features = false }
