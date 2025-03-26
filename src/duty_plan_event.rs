@@ -36,7 +36,7 @@ impl DutyPlanEvent
         const GROUND_PATTERN: &str = r"^((?P<category>GeneralEvent|Mandatory Training|Office Day|Simulator) \((?P<description>.+)\))$";
         const HOLIDAY_PATTERN: &str = r"^(Absence \(U\))$";
         const LAYOVER_PATTERN: &str = r"^(LAYOVER)$";
-        const OFF_PATTERN: &str = r"^(Off Day \(ORTSTAG\)|Off Day \(OFF\))$";
+        const OFF_PATTERN: &str = r"^(Off Day \(.+\))$";
         const PICKUP_PATTERN: &str = r"^(\d{2}:\d{2} LT Pickup [A-Z]{3})$";
         const SICKNESS_PATTERN: &str = r"^(Sickness \(K(O)?\))$";
 
