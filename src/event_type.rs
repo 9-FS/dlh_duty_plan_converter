@@ -1,10 +1,10 @@
-// Copyright (c) 2024 구FS, all rights reserved. Subject to the MIT licence in `licence.md`.
+// Copyright (c) 2025 구FS, all rights reserved. Subject to the MIT licence in `licence.md`.
 
 
 /// # Summary
 /// Types of events the duty plan can have. Each event defines a transformation to be made for the output calendar, "Rest" means nothing is changed. Contains the regex patterns to match the events.
 #[derive(Clone, Debug)]
-pub enum DutyPlanEvent
+pub enum EventType
 {
     Briefing, // briefing before a rotation
     Deadhead {flight_iata: String, departure_iata: String, destination_iata: String}, // deadhead from A to B
@@ -18,7 +18,7 @@ pub enum DutyPlanEvent
     Unknown, // unknown events with no specially defined behaviour, only do minimum
 }
 
-impl DutyPlanEvent
+impl EventType
 {
     /// # Summary
     /// Determine the event type of a calendar event based on its summary.
@@ -28,7 +28,7 @@ impl DutyPlanEvent
     ///
     /// # Returns
     /// - the determined event type or `DutyPlanEvent::Default` if the event type could not be determined
-    pub fn determine_event(calendar_event_summary: String) -> Self
+    pub fn determine_event_type(calendar_event_summary: String) -> Self
     {
         const BRIEFING_PATTERN: &str = r"^(\d{2}:\d{2} LT Briefing [A-Z]{3})$";
         const DEADHEAD_PATTERN: &str = r"^(DH (?P<flight_iata>[\dA-Z][A-Z] \d{1,4}): (?P<departure_iata>[A-Z]{3})-(?P<destination_iata>[A-Z]{3}))$";

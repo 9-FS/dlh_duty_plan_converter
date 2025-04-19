@@ -3,13 +3,16 @@ mod api_response;
 mod config;
 use config::*;
 mod connect_to_db;
-mod duty_plan_event;
+mod dateperhapstime_to_string;
 mod error;
+mod event_type;
+mod is_archived;
+mod load_calendar;
 mod main_inner;
 use main_inner::*;
 mod transform_calendar_event;
 mod update_calendar;
-mod update_data;
+mod update_db;
 
 
 fn main() -> std::process::ExitCode

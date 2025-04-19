@@ -1,5 +1,7 @@
 // Copyright (c) 2024 구FS, all rights reserved. Subject to the MIT licence in `licence.md`.
 use icalendar::{Component, EventLike};
+use crate::dateperhapstime_to_string::*;
+use crate::is_archived::*;
 
 
 /// # Summary
@@ -8,12 +10,13 @@ use icalendar::{Component, EventLike};
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
 /// - `db`: airport database
+/// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub async fn transform_briefing(mut calendar_event: icalendar::Event, db: &sqlx::sqlite::SqlitePool) -> icalendar::Event
+pub async fn transform_briefing(mut calendar_event: icalendar::Event, db: &sqlx::sqlite::SqlitePool, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
-    calendar_event = transform_unknown(calendar_event); // always do minimum before specific actions
+    calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.summary("Briefing");
     if let Some(row) = lookup_iata(calendar_event.get_location().unwrap_or_default().to_owned(), db).await // if iata location found
     {
@@ -35,13 +38,17 @@ pub async fn transform_briefing(mut calendar_event: icalendar::Event, db: &sqlx:
 ///
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
+/// - `flight_iata`: flight IATA code
+/// - `departure_iata`: departure IATA code
+/// - `destination_iata`: destination IATA code
 /// - `db`: airport database
+/// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub async fn transform_deadhead(mut calendar_event: icalendar::Event, flight_iata: String, departure_iata: String, destination_iata: String, db: &sqlx::sqlite::SqlitePool) -> icalendar::Event
+pub async fn transform_deadhead(mut calendar_event: icalendar::Event, flight_iata: String, departure_iata: String, destination_iata: String, db: &sqlx::sqlite::SqlitePool, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
-    calendar_event = transform_unknown(calendar_event); // always do minimum before specific actions
+    calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.summary(format!("DEADHEAD {flight_iata}: {} ✈ {}", try_iata_to_icao(departure_iata.to_owned(), db).await, try_iata_to_icao(destination_iata.to_owned(), db).await).as_str()); // change summary format
     if let Some(row) = lookup_iata(departure_iata, db).await // if iata location found
     {
@@ -62,13 +69,17 @@ pub async fn transform_deadhead(mut calendar_event: icalendar::Event, flight_iat
 ///
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
+/// - `flight_iata`: flight IATA code
+/// - `departure_iata`: departure IATA code
+/// - `destination_iata`: destination IATA code
 /// - `db`: airport database
+/// -- `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub async fn transform_flight(mut calendar_event: icalendar::Event, flight_iata: String, departure_iata: String, destination_iata: String, db: &sqlx::sqlite::SqlitePool) -> icalendar::Event
+pub async fn transform_flight(mut calendar_event: icalendar::Event, flight_iata: String, departure_iata: String, destination_iata: String, db: &sqlx::sqlite::SqlitePool, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
-    calendar_event = transform_unknown(calendar_event); // always do minimum before specific actions
+    calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.summary(format!("{flight_iata}: {} ✈ {}", try_iata_to_icao(departure_iata.to_owned(), db).await, try_iata_to_icao(destination_iata.to_owned(), db).await).as_str()); // change summary format
     if let Some(row) = lookup_iata(departure_iata, db).await // if iata location found
     {
@@ -88,13 +99,16 @@ pub async fn transform_flight(mut calendar_event: icalendar::Event, flight_iata:
 ///
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
+/// - `category`: category of the event
+/// - `description`: description of the event
 /// - `db`: airport database
+/// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub async fn transform_ground(mut calendar_event: icalendar::Event, category: String, description: String, db: &sqlx::sqlite::SqlitePool) -> icalendar::Event
+pub async fn transform_ground(mut calendar_event: icalendar::Event, category: String, description: String, db: &sqlx::sqlite::SqlitePool, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
-    calendar_event = transform_unknown(calendar_event); // always do minimum before specific actions
+    calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     if category == "" {calendar_event.summary(description.as_str());} // if category is empty: change summary to description
     else {calendar_event.summary(format!("{category}: {description}").as_str());} // otherwise: change summary format only slightly
     if let Some(row) = lookup_iata(calendar_event.get_location().unwrap_or_default().to_owned(), db).await // if iata location found
@@ -113,12 +127,13 @@ pub async fn transform_ground(mut calendar_event: icalendar::Event, category: St
 ///
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
+/// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub fn transform_holiday(mut calendar_event: icalendar::Event) -> icalendar::Event
+pub fn transform_holiday(mut calendar_event: icalendar::Event, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
-    calendar_event = transform_unknown(calendar_event); // always do minimum before specific actions
+    calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.location(""); // holiday does not need a location
     calendar_event.summary("Holiday");
 
@@ -132,12 +147,13 @@ pub fn transform_holiday(mut calendar_event: icalendar::Event) -> icalendar::Eve
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
 /// - `db`: airport database
+/// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub async fn transform_layover(mut calendar_event: icalendar::Event, db: &sqlx::sqlite::SqlitePool) -> icalendar::Event
+pub async fn transform_layover(mut calendar_event: icalendar::Event, db: &sqlx::sqlite::SqlitePool, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
-    calendar_event = transform_unknown(calendar_event); // always do minimum before specific actions
+    calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.summary("Layover");
     if let Some(row) = lookup_iata(calendar_event.get_location().unwrap_or_default().to_owned(), db).await // if iata location found
     {
@@ -153,12 +169,13 @@ pub async fn transform_layover(mut calendar_event: icalendar::Event, db: &sqlx::
 ///
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
+/// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub fn transform_off(mut calendar_event: icalendar::Event) -> icalendar::Event
+pub fn transform_off(mut calendar_event: icalendar::Event, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
-    calendar_event = transform_unknown(calendar_event); // always do minimum before specific actions
+    calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.location(""); // off day does not need a location
     calendar_event.summary("Off");
 
@@ -172,12 +189,13 @@ pub fn transform_off(mut calendar_event: icalendar::Event) -> icalendar::Event
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
 /// - `db`: airport database
+/// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub async fn transform_pickup(mut calendar_event: icalendar::Event, db: &sqlx::sqlite::SqlitePool) -> icalendar::Event
+pub async fn transform_pickup(mut calendar_event: icalendar::Event, db: &sqlx::sqlite::SqlitePool, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
-    calendar_event = transform_unknown(calendar_event); // always do minimum before specific actions
+    calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.summary("Pickup");
     if let Some(row) = lookup_iata(calendar_event.get_location().unwrap_or_default().to_owned(), db).await // if iata location found
     {
@@ -195,12 +213,30 @@ pub async fn transform_pickup(mut calendar_event: icalendar::Event, db: &sqlx::s
 ///
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
+/// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub fn transform_unknown(mut calendar_event: icalendar::Event) -> icalendar::Event
+pub fn transform_unknown(mut calendar_event: icalendar::Event, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
     calendar_event.description(""); // remove unnecessary description from mytime
+
+    match dateperhapstime_to_string(calendar_event.get_end().expect(format!("Calendar event {} \"{}\" has no end datetime even though it is mandatory upon saving in the database.", calendar_event.get_uid().unwrap_or_default(), calendar_event.get_summary().unwrap_or_default()).as_str()))
+    {
+        Ok(o) =>
+        {
+            if is_archived(o.as_str(),  archive_end_dt) // if table is not empty and event is archived: do not insert
+                .expect(format!("Parsing \"{o}\" to datetime failed even though it should have been properly formatted in dateperhapstime_to_string.").as_str())
+            {
+                calendar_event.description("archived event 🔒"); // if event is archived: state in description
+            } // set end date to string
+        },
+        Err(e) =>
+        {
+            log::error!("{e}");
+            return calendar_event; // if parsing failed: return unchanged calendar event
+        }
+    }
 
     return calendar_event;
 }
@@ -211,12 +247,13 @@ pub fn transform_unknown(mut calendar_event: icalendar::Event) -> icalendar::Eve
 ///
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
+/// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub fn transform_sickness(mut calendar_event: icalendar::Event) -> icalendar::Event
+pub fn transform_sickness(mut calendar_event: icalendar::Event, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
-    calendar_event = transform_unknown(calendar_event); // always do minimum before specific actions
+    calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.location(""); // sickness does not need a location
     calendar_event.summary("Sickness");
 
