@@ -205,7 +205,7 @@ pub async fn update_events(http_client: &reqwest::Client, input_calendar_url: &s
 
     if !event_db_empty // if table not empty: delete all active events before inserting new ones
     {
-        query = sqlx::query_builder::QueryBuilder::new(EVENT_QUERY_STRING[1]);
+        let mut query = sqlx::query_builder::QueryBuilder::new(EVENT_QUERY_STRING[1]);
         rows_affected += query
             .build()
             .bind(archive_end_dt) // bind archive end datetime to query
