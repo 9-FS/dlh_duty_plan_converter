@@ -1,3 +1,5 @@
+name: "dlh_duty_plan_converter"
+
 services:
     dlh_duty_plan_converter:
         container_name: "dlh_duty_plan_converter"
