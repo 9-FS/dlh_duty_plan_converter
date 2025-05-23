@@ -5,11 +5,11 @@ WORKDIR "/app/"
 COPY "." "."
 RUN cargo build --release
 
-FROM alpine
+FROM gcr.io/distroless/cc
 WORKDIR "/app/"
 COPY --from=builder "/app/target/release/dlh_duty_plan_converter" "."
 
-CMD ["./dlh_duty_plan_converter"]
+ENTRYPOINT ["./dlh_duty_plan_converter"]
 
 
 # MANUAL BUILD:
