@@ -34,7 +34,7 @@ impl EventType
         const DEADHEAD_PATTERN: &str = r"^(DH (?P<flight_iata>[\dA-Z][A-Z] \d{1,4}): (?P<departure_iata>[A-Z]{3})-(?P<destination_iata>[A-Z]{3}))$";
         const FLIGHT_PATTERN: &str = r"^((?P<flight_iata>[\dA-Z][A-Z] \d{1,4}): (?P<departure_iata>[A-Z]{3})-(?P<destination_iata>[A-Z]{3}))$";
         const GROUND_PATTERN: &str = r"^((?P<category>GeneralEvent|Mandatory Training|Office Day|Simulator) \((?P<description>.+)\))$";
-        const HOLIDAY_PATTERN: &str = r"^(Absence \(U\))$";
+        const HOLIDAY_PATTERN: &str = r"^(Absence \(.+\))$";
         const LAYOVER_PATTERN: &str = r"^(LAYOVER)$";
         const OFF_PATTERN: &str = r"^(Off Day \(.+\))$";
         const PICKUP_PATTERN: &str = r"^(\d{2}:\d{2} LT Pickup [A-Z]{3})$";
