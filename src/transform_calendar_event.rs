@@ -209,7 +209,7 @@ pub async fn transform_pickup(mut calendar_event: icalendar::Event, db: &sqlx::s
 
 
 /// # Summary
-/// Transforms an unknown event. Only does the minimum: removes the unnecessary description.
+/// Transforms an unknown event. Only does the minimum: removes the unnecessary description and checks if the event is archived.
 ///
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform

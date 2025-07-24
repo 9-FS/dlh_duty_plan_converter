@@ -2,7 +2,7 @@ name: "On Tag Deploy on GitHub"
 env:
     REPO_NAME: "dlh_duty_plan_converter"
     RUN_TESTS: true
-    RUST_VERSION: "1.86"
+    RUST_VERSION: "1.88"
 on:
     push:
         tags:

@@ -9,7 +9,6 @@ use crate::update_db::*;
 pub async fn main_inner(config: Config) -> Result<(), Error>
 {
     const AIRPORT_DATA_URL: &str = "https://ourairports.com/data/airports.csv"; // airport data online
-    const ARCHIVE_END_RELATIVE: chrono::Duration = chrono::Duration::days(-7); // when relative to now to consider event archived, 1 week before now
     const COUNTRY_DATA_URL: &str = "https://ourairports.com/data/countries.csv"; // country data online
     const DB_FILEPATH: &str = "./db/db.sqlite"; // database filepath
     const HTTP_TIMEOUT: u64 = 10; // connection timeout
@@ -45,7 +44,7 @@ pub async fn main_inner(config: Config) -> Result<(), Error>
         'iteration:
         {
             let db: sqlx::sqlite::SqlitePool; // database containing all airport data
-            let archive_end_dt: chrono::DateTime<chrono::Utc> = chrono::Utc::now() + ARCHIVE_END_RELATIVE; // when archive ends, read once to have clear reference point for archiving per iteration
+            let archive_end_dt: chrono::DateTime<chrono::Utc> = chrono::Utc::now() + config.ARCHIVE_END_RELATIVE; // when archive ends, read clock once to have clear reference point for archiving per iteration
 
 
             log::info!("--------------------------------------------------");

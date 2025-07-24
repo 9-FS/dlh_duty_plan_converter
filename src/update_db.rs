@@ -277,7 +277,7 @@ pub async fn update_events(http_client: &reqwest::Client, input_calendar_url: &s
                     continue;
                 },
             }
-            if !event_db_empty && is_archived(end_str.as_str(),  &(chrono::Utc::now() - chrono::Duration::weeks(1))) // if table is not empty and event is archived: do not insert
+            if !event_db_empty && is_archived(end_str.as_str(), archive_end_dt) // if table is not empty and event is archived: do not insert
                 .expect(format!("Parsing \"{end_str}\" to datetime failed even though it should have been properly formatted in dateperhapstime_to_string.").as_str())
             {
                 continue;
