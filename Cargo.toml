@@ -9,7 +9,7 @@ license     = "MIT"
 name        = "dlh_duty_plan_converter"
 readme      = "readme.md"
 repository  = "https://github.com/9-FS/dlh_duty_plan_converter"
-version     = "2.2.0"
+version     = "2.3.0"
 
 [dependencies]
 chrono = { version = "^0.4.0", default-features = false, features = ["serde"] }
@@ -17,24 +17,22 @@ chrono-tz = "^0.10.0"
 csv = "^1.0.0"
 futures = { version = "^0.3.0", default-features = false }
 icalendar = "^0.17.0"
+include_dir = "^0.7.0"
 load_config = { git = "https://github.com/9-FS/load_config", tag = "1.2.1", features = [
     "toml_file",
 ] }
 log = "^0.4.0"
 regex = "^1.0.0"
 reqwest = { version = "^0.12.0", default-features = false, features = [
+    "blocking",
     "rustls-tls",
 ] }
+rusqlite = { version = "^0.37.0", features = ["bundled", "chrono"] }
+rusqlite_migration = { version = "^2.0.0", features = ["from-directory"] }
 scaler = "^1.0.0"
 serde = { version = "^1.0.0", features = ["derive"] }
 setup_logging = { git = "https://github.com/9-FS/setup_logging", tag = "2.1.0" }
-sqlx = { version = "^0.8.0", features = [
-    "chrono",
-    "runtime-tokio-rustls",
-    "sqlite",
-] }
 thiserror = "^2.0.0"
-tokio = { version = "^1.0.0", features = ["rt-multi-thread"] }
 
 [lints.clippy]
 needless_late_init = "allow"

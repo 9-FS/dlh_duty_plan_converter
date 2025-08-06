@@ -1,6 +1,6 @@
 CREATE TABLE Airport
 (
-    id INTEGER NOT NULL,
+    id INTEGER PRIMARY KEY,
     ident TEXT NOT NULL,
     type TEXT NOT NULL,
     name TEXT NOT NULL,
@@ -17,17 +17,25 @@ CREATE TABLE Airport
     local_code TEXT,
     home_link TEXT,
     wikipedia_link TEXT,
-    keywords TEXT,
-    PRIMARY KEY(id)
+    keywords TEXT
 );
 
 CREATE TABLE Country
 (
-    id INTEGER NOT NULL,
+    id INTEGER PRIMARY KEY,
     code TEXT NOT NULL,
     name TEXT NOT NULL,
     continent TEXT NOT NULL,
     wikipedia_link TEXT,
-    keywords TEXT,
-    PRIMARY KEY(id)
+    keywords TEXT
+);
+
+CREATE TABLE Event
+(
+    uid TEXT PRIMARY KEY,
+    summary TEXT,
+    start_dt TEXT NOT NULL,
+    end_dt TEXT NOT NULL,
+    location TEXT,
+    description TEXT
 );

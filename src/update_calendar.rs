@@ -19,15 +19,15 @@ use crate::update_db::*;
 ///
 /// # Returns
 /// - nothing or error
-pub async fn update_calendar(http_client: &reqwest::Client, input_calendar_url: &str, output_calendar_filepath: &str, db: &sqlx::sqlite::SqlitePool, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> Result<(), UpdateCalendarError>
+pub fn update_calendar(http_client: &reqwest::blocking::Client, input_calendar_url: &str, output_calendar_filepath: &str, mut db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> Result<(), UpdateCalendarError>
 {
     const ALERT_TRIGGER_PATTERN: &str = r"PT(?P<t_trigger>[0-9]+)S"; // alert trigger pattern in calendar ical, purposely disregard potential minus sign in front of "PT" to keep it unchanged
     let input_calendar: icalendar::Calendar; // input calendar
     let mut output_calendar: icalendar::Calendar = icalendar::Calendar::new(); // transformed output calendar
 
 
-    update_events(http_client, input_calendar_url, db, archive_end_dt).await?;
-    input_calendar = load_calendar(db).await?; // load whole calendar from database
+    update_events(http_client, input_calendar_url, db, archive_end_dt)?;
+    input_calendar = load_calendar(db)?; // load whole calendar from database
 
 
     output_calendar.name("DLH Duty Plan"); // set calendar name
@@ -39,14 +39,14 @@ pub async fn update_calendar(http_client: &reqwest::Client, input_calendar_url: 
             {
                 match EventType::determine_event_type(calendar_event.get_summary().unwrap_or_default().to_owned()) // determine event type, transform accordingly
                 {
-                    EventType::Briefing => {output_calendar.push(transform_briefing(calendar_event, &db, archive_end_dt).await);},
-                    EventType::Deadhead {flight_iata, departure_iata, destination_iata} => {output_calendar.push(transform_deadhead(calendar_event, flight_iata, departure_iata, destination_iata, &db, archive_end_dt).await);},
-                    EventType::Flight {flight_iata, departure_iata, destination_iata} => {output_calendar.push(transform_flight(calendar_event, flight_iata, departure_iata, destination_iata, &db, archive_end_dt).await);},
-                    EventType::Ground {category, description} => {output_calendar.push(transform_ground(calendar_event, category, description, &db, archive_end_dt).await);},
+                    EventType::Briefing => {output_calendar.push(transform_briefing(calendar_event, &mut db, archive_end_dt));},
+                    EventType::Deadhead {flight_iata, departure_iata, destination_iata} => {output_calendar.push(transform_deadhead(calendar_event, flight_iata, departure_iata, destination_iata, &mut db, archive_end_dt));},
+                    EventType::Flight {flight_iata, departure_iata, destination_iata} => {output_calendar.push(transform_flight(calendar_event, flight_iata, departure_iata, destination_iata, &mut db, archive_end_dt));},
+                    EventType::Ground {category, description} => {output_calendar.push(transform_ground(calendar_event, category, description, &mut db, archive_end_dt));},
                     EventType::Holiday => {output_calendar.push(transform_holiday(calendar_event, archive_end_dt));},
-                    EventType::Layover => {output_calendar.push(transform_layover(calendar_event, &db, archive_end_dt).await);},
+                    EventType::Layover => {output_calendar.push(transform_layover(calendar_event, &mut db, archive_end_dt));},
                     EventType::Off => {output_calendar.push(transform_off(calendar_event, archive_end_dt));},
-                    EventType::Pickup => {output_calendar.push(transform_pickup(calendar_event, &db, archive_end_dt).await);},
+                    EventType::Pickup => {output_calendar.push(transform_pickup(calendar_event, &mut db, archive_end_dt));},
                     EventType::Sickness => {output_calendar.push(transform_sickness(calendar_event, archive_end_dt));},
                     EventType::Unknown => {output_calendar.push(transform_unknown(calendar_event, archive_end_dt));},
                 }

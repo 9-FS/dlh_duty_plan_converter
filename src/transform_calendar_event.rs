@@ -14,11 +14,11 @@ use crate::is_archived::*;
 ///
 /// # Returns
 /// - the transformed calendar event
-pub async fn transform_briefing(mut calendar_event: icalendar::Event, db: &sqlx::sqlite::SqlitePool, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
+pub fn transform_briefing(mut calendar_event: icalendar::Event, db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
     calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.summary("Briefing");
-    if let Some(row) = lookup_iata(calendar_event.get_location().unwrap_or_default().to_owned(), db).await // if iata location found
+    if let Some(row) = lookup_iata(calendar_event.get_location().unwrap_or_default().to_owned(), db) // if iata location found
     {
         if let Some(s) = row.airport_gps_code // if entry contains icao location
         {
@@ -46,11 +46,11 @@ pub async fn transform_briefing(mut calendar_event: icalendar::Event, db: &sqlx:
 ///
 /// # Returns
 /// - the transformed calendar event
-pub async fn transform_deadhead(mut calendar_event: icalendar::Event, flight_iata: String, departure_iata: String, destination_iata: String, db: &sqlx::sqlite::SqlitePool, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
+pub fn transform_deadhead(mut calendar_event: icalendar::Event, flight_iata: String, departure_iata: String, destination_iata: String, db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
     calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
-    calendar_event.summary(format!("DEADHEAD {flight_iata}: {} ✈ {}", try_iata_to_icao(departure_iata.to_owned(), db).await, try_iata_to_icao(destination_iata.to_owned(), db).await).as_str()); // change summary format
-    if let Some(row) = lookup_iata(departure_iata, db).await // if iata location found
+    calendar_event.summary(format!("DEADHEAD {flight_iata}: {} ✈ {}", try_iata_to_icao(departure_iata.to_owned(), db), try_iata_to_icao(destination_iata.to_owned(), db)).as_str()); // change summary format
+    if let Some(row) = lookup_iata(departure_iata, db) // if iata location found
     {
         if let Some(s) = row.airport_gps_code // if entry contains icao location
         {
@@ -77,11 +77,11 @@ pub async fn transform_deadhead(mut calendar_event: icalendar::Event, flight_iat
 ///
 /// # Returns
 /// - the transformed calendar event
-pub async fn transform_flight(mut calendar_event: icalendar::Event, flight_iata: String, departure_iata: String, destination_iata: String, db: &sqlx::sqlite::SqlitePool, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
+pub fn transform_flight(mut calendar_event: icalendar::Event, flight_iata: String, departure_iata: String, destination_iata: String, db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
     calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
-    calendar_event.summary(format!("{flight_iata}: {} ✈ {}", try_iata_to_icao(departure_iata.to_owned(), db).await, try_iata_to_icao(destination_iata.to_owned(), db).await).as_str()); // change summary format
-    if let Some(row) = lookup_iata(departure_iata, db).await // if iata location found
+    calendar_event.summary(format!("{flight_iata}: {} ✈ {}", try_iata_to_icao(departure_iata.to_owned(), db), try_iata_to_icao(destination_iata.to_owned(), db)).as_str()); // change summary format
+    if let Some(row) = lookup_iata(departure_iata, db) // if iata location found
     {
         if let Some(s) = row.airport_gps_code // if entry contains icao location
         {
@@ -106,12 +106,12 @@ pub async fn transform_flight(mut calendar_event: icalendar::Event, flight_iata:
 ///
 /// # Returns
 /// - the transformed calendar event
-pub async fn transform_ground(mut calendar_event: icalendar::Event, category: String, description: String, db: &sqlx::sqlite::SqlitePool, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
+pub fn transform_ground(mut calendar_event: icalendar::Event, category: String, description: String, db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
     calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     if category == "" {calendar_event.summary(description.as_str());} // if category is empty: change summary to description
     else {calendar_event.summary(format!("{category}: {description}").as_str());} // otherwise: change summary format only slightly
-    if let Some(row) = lookup_iata(calendar_event.get_location().unwrap_or_default().to_owned(), db).await // if iata location found
+    if let Some(row) = lookup_iata(calendar_event.get_location().unwrap_or_default().to_owned(), db) // if iata location found
     {
         calendar_event.location(format!("{}, {}", row.country_name, row.airport_municipality).as_str()); // change iata location to country and city
     } // otherwise just keep original data
@@ -151,11 +151,11 @@ pub fn transform_holiday(mut calendar_event: icalendar::Event, archive_end_dt: &
 ///
 /// # Returns
 /// - the transformed calendar event
-pub async fn transform_layover(mut calendar_event: icalendar::Event, db: &sqlx::sqlite::SqlitePool, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
+pub fn transform_layover(mut calendar_event: icalendar::Event, db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
     calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.summary("Layover");
-    if let Some(row) = lookup_iata(calendar_event.get_location().unwrap_or_default().to_owned(), db).await // if iata location found
+    if let Some(row) = lookup_iata(calendar_event.get_location().unwrap_or_default().to_owned(), db) // if iata location found
     {
         calendar_event.location(format!("{}, {}", row.country_name, row.airport_municipality).as_str()); // change iata location to country and city
     } // otherwise just keep original data
@@ -193,11 +193,11 @@ pub fn transform_off(mut calendar_event: icalendar::Event, archive_end_dt: &chro
 ///
 /// # Returns
 /// - the transformed calendar event
-pub async fn transform_pickup(mut calendar_event: icalendar::Event, db: &sqlx::sqlite::SqlitePool, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
+pub fn transform_pickup(mut calendar_event: icalendar::Event, db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
     calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.summary("Pickup");
-    if let Some(row) = lookup_iata(calendar_event.get_location().unwrap_or_default().to_owned(), db).await // if iata location found
+    if let Some(row) = lookup_iata(calendar_event.get_location().unwrap_or_default().to_owned(), db) // if iata location found
     {
         calendar_event.location(format!("{}, {}", row.country_name, row.airport_municipality).as_str()); // change iata location to country and city
     } // otherwise just keep original data
@@ -262,7 +262,7 @@ pub fn transform_sickness(mut calendar_event: icalendar::Event, archive_end_dt: 
 
 
 /// # Summary
-/// Takes an IATA location and tries to get the ICAO location, country, and airport name. If no entry could be found, returns None.
+/// Takes an IATA location and tries to get the ICAO location, country, and airport name. If not exactly 1 entry could be found, returns None.
 ///
 /// # Arguments
 /// - `iata`: IATA location
@@ -271,14 +271,21 @@ pub fn transform_sickness(mut calendar_event: icalendar::Event, archive_end_dt: 
 /// - ICAO location
 /// - country name
 /// - airport name
-async fn lookup_iata(iata: String, db: &sqlx::sqlite::SqlitePool) -> Option<IataLookupRow>
+fn lookup_iata(iata: String, db: &mut rusqlite::Connection) -> Option<IataLookupRow>
 {
-    return sqlx::query_as("SELECT Airport.gps_code AS airport_gps_code, Airport.municipality AS airport_municipality, Country.name AS country_name, Airport.name AS airport_name FROM Airport JOIN Country ON Airport.iso_country = Country.code WHERE Airport.iata_code = ?") // get icao location
-        .bind(&iata) // from iata location
-        .fetch_optional(db).await.unwrap_or_default(); // execute query, if failed return None as if no icao location found
+    const LOOKUP_IATA_QUERY_STRING: &str = "SELECT Airport.gps_code AS airport_gps_code, Airport.municipality AS airport_municipality, Country.name AS country_name, Airport.name AS airport_name FROM Airport JOIN Country ON Airport.iso_country = Country.code WHERE Airport.iata_code = ?;"; // query string for iata lookup
+
+
+    return db.query_one(LOOKUP_IATA_QUERY_STRING, (iata,), |row| { Ok(IataLookupRow
+    {
+        airport_name: row.get("airport_name")?,
+        airport_gps_code: row.get("airport_gps_code")?,
+        airport_municipality: row.get("airport_municipality")?,
+        country_name: row.get("country_name")?
+    })}).ok(); // execute query, if failed return None as if no icao location found
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, sqlx::FromRow)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct IataLookupRow
 {
     pub airport_name: String, // Airport.name
@@ -296,10 +303,10 @@ pub struct IataLookupRow
 ///
 /// # Returns
 /// - ICAO location or unchanged input value
-async fn try_iata_to_icao(iata: String, db: &sqlx::sqlite::SqlitePool) -> String
+fn try_iata_to_icao(iata: String, db: &mut rusqlite::Connection) -> String
 {
-    return sqlx::query_scalar("SELECT gps_code FROM Airport WHERE iata_code = ?") // get icao location
-        .bind(&iata) // from iata location
-        .fetch_optional(db).await.unwrap_or_default() // execute query, if failed return None as if no icao location found
-        .unwrap_or(iata); // if no icao location found: forward unchanged value
+    const IATA_TO_ICAO_QUERY_STRING: &str = "SELECT gps_code FROM Airport WHERE iata_code = ?;"; // query string for iata to icao lookup
+
+
+    return db.query_one(IATA_TO_ICAO_QUERY_STRING, (&iata,), |row| { row.get("gps_code")}).unwrap_or(iata); // if no icao location found: forward unchanged value
 }
