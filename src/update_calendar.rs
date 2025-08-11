@@ -47,6 +47,7 @@ pub fn update_calendar(http_client: &reqwest::blocking::Client, input_calendar_u
                     EventType::Layover => {output_calendar.push(transform_layover(calendar_event, &mut db, archive_end_dt));},
                     EventType::Off => {output_calendar.push(transform_off(calendar_event, archive_end_dt));},
                     EventType::Pickup => {output_calendar.push(transform_pickup(calendar_event, &mut db, archive_end_dt));},
+                    EventType::Reserve {description} => {output_calendar.push(transform_reserve(calendar_event, description, &mut db, archive_end_dt));},
                     EventType::Sickness => {output_calendar.push(transform_sickness(calendar_event, archive_end_dt));},
                     EventType::Unknown => {output_calendar.push(transform_unknown(calendar_event, archive_end_dt));},
                 }

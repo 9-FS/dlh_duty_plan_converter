@@ -209,6 +209,50 @@ pub fn transform_pickup(mut calendar_event: icalendar::Event, db: &mut rusqlite:
 
 
 /// # Summary
+/// Transforms the reserve event. Additionally to the minimum actions changes summary format, changes IATA locations to ICAO location only, and adds alarms at -15 min.
+///
+/// # Arguments
+/// - `calendar_event`: the calendar event to transform
+/// - `description`: description of the event
+/// - `db`: airport database
+/// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
+///
+/// # Returns
+/// - the transformed calendar event
+pub fn transform_reserve(mut calendar_event: icalendar::Event, description: String, db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
+{
+    calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
+    calendar_event.summary(format!("{description}").as_str()); // change summary format
+    if let Some(row) = lookup_iata(calendar_event.get_location().unwrap_or_default().to_owned(), db) // if iata location found
+    {
+        calendar_event.location(format!("{}, {}", row.country_name, row.airport_municipality).as_str()); // change iata location to country and city
+    } // otherwise just keep original data
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-15))); // add alarm at -15 min
+
+    return calendar_event;
+}
+
+
+/// # Summary
+/// Transforms a sick day. Additionally to the minimum actions changes summary to "Sickness".
+///
+/// # Arguments
+/// - `calendar_event`: the calendar event to transform
+/// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
+///
+/// # Returns
+/// - the transformed calendar event
+pub fn transform_sickness(mut calendar_event: icalendar::Event, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
+{
+    calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
+    calendar_event.location(""); // sickness does not need a location
+    calendar_event.summary("Sickness");
+
+    return calendar_event;
+}
+
+
+/// # Summary
 /// Transforms an unknown event. Only does the minimum: removes the unnecessary description and checks if the event is archived.
 ///
 /// # Arguments
@@ -237,25 +281,6 @@ pub fn transform_unknown(mut calendar_event: icalendar::Event, archive_end_dt: &
             return calendar_event; // if parsing failed: return unchanged calendar event
         }
     }
-
-    return calendar_event;
-}
-
-
-/// # Summary
-/// Transforms a sick day. Additionally to the minimum actions changes summary to "Sickness".
-///
-/// # Arguments
-/// - `calendar_event`: the calendar event to transform
-/// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
-///
-/// # Returns
-/// - the transformed calendar event
-pub fn transform_sickness(mut calendar_event: icalendar::Event, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
-{
-    calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
-    calendar_event.location(""); // sickness does not need a location
-    calendar_event.summary("Sickness");
 
     return calendar_event;
 }

@@ -14,6 +14,7 @@ pub enum EventType
     Layover, // layover somewhere else
     Off, // free day
     Pickup, // hotel pickup
+    Reserve {description: String}, // reserve duty
     Sickness, // sickness
     Unknown, // unknown events with no specially defined behaviour, only do minimum
 }
@@ -38,6 +39,7 @@ impl EventType
         const LAYOVER_PATTERN: &str = r"^(LAYOVER)$";
         const OFF_PATTERN: &str = r"^(Off Day \(.+\))$";
         const PICKUP_PATTERN: &str = r"^(\d{2}:\d{2} LT Pickup [A-Z]{3})$";
+        const RESERVE_PATTERN: &str = r"^(Reserve \((?P<description>.+)\))$";
         const SICKNESS_PATTERN: &str = r"^(Sickness \(K(O)?\))$";
 
 
@@ -77,6 +79,10 @@ impl EventType
         else if regex::Regex::new(PICKUP_PATTERN).expect("Compiling pickup regex failed.").is_match(calendar_event_summary.as_str())
         {
             return Self::Pickup;
+        }
+        else if let Some(captures) = regex::Regex::new(RESERVE_PATTERN).expect("Compiling pickup regex failed.").captures(calendar_event_summary.as_str())
+        {
+            return Self::Reserve {description: captures["description"].to_owned()};
         }
         else if regex::Regex::new(SICKNESS_PATTERN).expect("Compiling sickness regex failed.").is_match(calendar_event_summary.as_str())
         {
