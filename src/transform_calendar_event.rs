@@ -9,12 +9,12 @@ use crate::is_archived::*;
 ///
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
-/// - `db`: airport database
+/// - `db`: airport database connection pool
 /// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub fn transform_briefing(mut calendar_event: icalendar::Event, db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
+pub fn transform_briefing(mut calendar_event: icalendar::Event, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
     calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.summary("Briefing");
@@ -41,12 +41,12 @@ pub fn transform_briefing(mut calendar_event: icalendar::Event, db: &mut rusqlit
 /// - `flight_iata`: flight IATA code
 /// - `departure_iata`: departure IATA code
 /// - `destination_iata`: destination IATA code
-/// - `db`: airport database
+/// - `db`: airport database connection pool
 /// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub fn transform_deadhead(mut calendar_event: icalendar::Event, flight_iata: String, departure_iata: String, destination_iata: String, db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
+pub fn transform_deadhead(mut calendar_event: icalendar::Event, flight_iata: String, departure_iata: String, destination_iata: String, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
     calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.summary(format!("DEADHEAD {flight_iata}: {} ✈ {}", try_iata_to_icao(departure_iata.to_owned(), db), try_iata_to_icao(destination_iata.to_owned(), db)).as_str()); // change summary format
@@ -72,12 +72,12 @@ pub fn transform_deadhead(mut calendar_event: icalendar::Event, flight_iata: Str
 /// - `flight_iata`: flight IATA code
 /// - `departure_iata`: departure IATA code
 /// - `destination_iata`: destination IATA code
-/// - `db`: airport database
+/// - `db`: airport database connection pool
 /// -- `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub fn transform_flight(mut calendar_event: icalendar::Event, flight_iata: String, departure_iata: String, destination_iata: String, db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
+pub fn transform_flight(mut calendar_event: icalendar::Event, flight_iata: String, departure_iata: String, destination_iata: String, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
     calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.summary(format!("{flight_iata}: {} ✈ {}", try_iata_to_icao(departure_iata.to_owned(), db), try_iata_to_icao(destination_iata.to_owned(), db)).as_str()); // change summary format
@@ -101,12 +101,12 @@ pub fn transform_flight(mut calendar_event: icalendar::Event, flight_iata: Strin
 /// - `calendar_event`: the calendar event to transform
 /// - `category`: category of the event
 /// - `description`: description of the event
-/// - `db`: airport database
+/// - `db`: airport database connection pool
 /// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub fn transform_ground(mut calendar_event: icalendar::Event, category: String, description: String, db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
+pub fn transform_ground(mut calendar_event: icalendar::Event, category: String, description: String, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
     calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     if category == "" {calendar_event.summary(description.as_str());} // if category is empty: change summary to description
@@ -146,12 +146,12 @@ pub fn transform_holiday(mut calendar_event: icalendar::Event, archive_end_dt: &
 ///
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
-/// - `db`: airport database
+/// - `db`: airport database connection pool
 /// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub fn transform_layover(mut calendar_event: icalendar::Event, db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
+pub fn transform_layover(mut calendar_event: icalendar::Event, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
     calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.summary("Layover");
@@ -188,12 +188,12 @@ pub fn transform_off(mut calendar_event: icalendar::Event, archive_end_dt: &chro
 ///
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
-/// - `db`: airport database
+/// - `db`: airport database connection pool
 /// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub fn transform_pickup(mut calendar_event: icalendar::Event, db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
+pub fn transform_pickup(mut calendar_event: icalendar::Event, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
     calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.summary("Pickup");
@@ -214,12 +214,12 @@ pub fn transform_pickup(mut calendar_event: icalendar::Event, db: &mut rusqlite:
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
 /// - `description`: description of the event
-/// - `db`: airport database
+/// - `db`: airport database connection pool
 /// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - the transformed calendar event
-pub fn transform_reserve(mut calendar_event: icalendar::Event, description: String, db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
+pub fn transform_reserve(mut calendar_event: icalendar::Event, description: String, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
     calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     calendar_event.summary(format!("{description}").as_str()); // change summary format
@@ -296,12 +296,13 @@ pub fn transform_unknown(mut calendar_event: icalendar::Event, archive_end_dt: &
 /// - ICAO location
 /// - country name
 /// - airport name
-fn lookup_iata(iata: String, db: &mut rusqlite::Connection) -> Option<IataLookupRow>
+fn lookup_iata(iata: String, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>) -> Option<IataLookupRow>
 {
     const LOOKUP_IATA_QUERY_STRING: &str = "SELECT Airport.gps_code AS airport_gps_code, Airport.municipality AS airport_municipality, Country.name AS country_name, Airport.name AS airport_name FROM Airport JOIN Country ON Airport.iso_country = Country.code WHERE Airport.iata_code = ?;"; // query string for iata lookup
 
 
-    return db.query_one(LOOKUP_IATA_QUERY_STRING, (iata,), |row| { Ok(IataLookupRow
+    let db_con = db.get().ok()?; // get connection
+    return db_con.query_one(LOOKUP_IATA_QUERY_STRING, (iata,), |row| { Ok(IataLookupRow
     {
         airport_name: row.get("airport_name")?,
         airport_gps_code: row.get("airport_gps_code")?,
@@ -328,10 +329,15 @@ pub struct IataLookupRow
 ///
 /// # Returns
 /// - ICAO location or unchanged input value
-fn try_iata_to_icao(iata: String, db: &mut rusqlite::Connection) -> String
+fn try_iata_to_icao(iata: String, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>) -> String
 {
     const IATA_TO_ICAO_QUERY_STRING: &str = "SELECT gps_code FROM Airport WHERE iata_code = ?;"; // query string for iata to icao lookup
 
 
-    return db.query_one(IATA_TO_ICAO_QUERY_STRING, (&iata,), |row| { row.get("gps_code")}).unwrap_or(iata); // if no icao location found: forward unchanged value
+    let db_con = match db.get() // get connection or fallback to return value unchanged
+    {
+        Ok(o) => o,
+        Err(_) => {return iata;},
+    };
+    return db_con.query_one(IATA_TO_ICAO_QUERY_STRING, (&iata,), |row| { row.get("gps_code")}).unwrap_or(iata); // if no icao location found: forward unchanged value
 }

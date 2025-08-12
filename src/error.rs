@@ -5,7 +5,7 @@
 pub enum ConnectToDbError
 {
     #[error("Connecting to database failed with: {0}")]
-    Rusqlite(#[from] rusqlite::Error),
+    R2d2(#[from] r2d2::Error),
 
     #[error("Running database migrations failed with: {0}")]
     RusqliteMigration(#[from] rusqlite_migration::Error),
@@ -41,7 +41,10 @@ pub enum Error
 pub enum LoadCalendarError
 {
     #[error("Loading calendar from database failed with: {0}")]
-    Rusqlite(#[from] rusqlite::Error), // rusqlite error
+    R2d2(#[from] r2d2::Error),
+
+    #[error("Loading calendar from database failed with: {0}")]
+    Rusqlite(#[from] rusqlite::Error),
 }
 
 
@@ -52,7 +55,10 @@ pub enum UpdateAirportsError
     Reqwest(#[from] reqwest::Error), // reqwest error
 
     #[error("Updating airports in database failed with: {0}")]
-    Rusqlite(#[from] rusqlite::Error), // rusqlite error
+    R2d2(#[from] r2d2::Error),
+
+    #[error("Updating airports in database failed with: {0}")]
+    Rusqlite(#[from] rusqlite::Error),
 }
 
 
@@ -77,7 +83,10 @@ pub enum UpdateCountriesError
     Reqwest(#[from] reqwest::Error), // reqwest error
 
     #[error("Updating countries in database failed with: {0}")]
-    Rusqlite(#[from] rusqlite::Error), // rusqlite error
+    R2d2(#[from] r2d2::Error),
+
+    #[error("Updating countries in database failed with: {0}")]
+    Rusqlite(#[from] rusqlite::Error),
 }
 
 
@@ -91,7 +100,10 @@ pub enum UpdateEventsError
     Reqwest(#[from] reqwest::Error), // reqwest error
 
     #[error("Updating events in database failed with: {0}")]
-    Rusqlite(#[from] rusqlite::Error), // rusqlite error
+    R2d2(#[from] r2d2::Error),
+
+    #[error("Updating events in database failed with: {0}")]
+    Rusqlite(#[from] rusqlite::Error),
 }
 
 impl From<String> for UpdateEventsError

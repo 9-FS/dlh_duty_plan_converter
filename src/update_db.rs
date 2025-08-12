@@ -14,15 +14,14 @@ use crate::is_archived::*;
 /// # Arguments
 /// - `http_client`: http client
 /// - `airport_data_url`: airport data source URL
-/// - `db`: database connection
+/// - `db`: database connection pool
 ///
 /// # Returns
 /// - nothing or error
-pub fn update_airports(http_client: &reqwest::blocking::Client, airport_data_url: &str, db: &mut rusqlite::Connection) -> Result<(), UpdateAirportsError>
+pub fn update_airports(http_client: &reqwest::blocking::Client, airport_data_url: &str, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>) -> Result<(), UpdateAirportsError>
 {
     const AIRPORT_QUERY_STRING: &str = "INSERT OR REPLACE INTO Airport (id, ident, type, name, latitude_deg, longitude_deg, elevation_ft, continent, iso_country, iso_region, municipality, scheduled_service, gps_code, iata_code, local_code, home_link, wikipedia_link, keywords) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"; // query string for Airport table
     let mut airports: Vec<AirportDownloadResponse> = std::vec::Vec::new(); // all airports
-    let db_tx: rusqlite::Transaction; // database transaction so automatic rollback on error
     let f: scaler::Formatter = scaler::Formatter::new().set_rounding(scaler::Rounding::Magnitude(0)).set_scaling(scaler::Scaling::None); // formatter for logging
 
 
@@ -47,8 +46,9 @@ pub fn update_airports(http_client: &reqwest::blocking::Client, airport_data_url
 
 
     log::info!("Updating airport database...");
-    let mut rows_affected: usize = 0; // number of rows affected
-    db_tx = db.transaction()?; // start transaction
+    let mut rows_affected = 0; // number of rows affected
+    let mut db_con = db.get()?; // get connection
+    let db_tx = db_con.transaction()?; // start transaction so automatic rollback on error
     {
         let mut db_stmt = db_tx.prepare(AIRPORT_QUERY_STRING)?; // prepare bulk insert
         for airport in airports
@@ -89,15 +89,14 @@ pub fn update_airports(http_client: &reqwest::blocking::Client, airport_data_url
 /// # Arguments
 /// - `http_client`: http client
 /// - `country_data_url`: country data source URL
-/// - `db`: database connection
+/// - `db`: database connection pool
 ///
 /// # Returns
 /// - nothing or error
-pub fn update_countries(http_client: &reqwest::blocking::Client, country_data_url: &str, db: &mut rusqlite::Connection) -> Result<(), UpdateCountriesError>
+pub fn update_countries(http_client: &reqwest::blocking::Client, country_data_url: &str, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>) -> Result<(), UpdateCountriesError>
 {
     const COUNTRY_QUERY_STRING: &str = "INSERT OR REPLACE INTO Country (id, code, name, continent, wikipedia_link, keywords) VALUES (?, ?, ?, ?, ?, ?);"; // query string for Country table
     let mut countries: Vec<CountryDownloadResponse> = std::vec::Vec::new(); // all countries
-    let db_tx: rusqlite::Transaction; // database transaction so automatic rollback on error
     let f: scaler::Formatter = scaler::Formatter::new().set_rounding(scaler::Rounding::Magnitude(0)).set_scaling(scaler::Scaling::None); // formatter for logging
 
 
@@ -121,7 +120,8 @@ pub fn update_countries(http_client: &reqwest::blocking::Client, country_data_ur
 
     log::info!("Updating country database...");
     let mut rows_affected: usize = 0; // number of rows affected
-    db_tx = db.transaction()?; // start transaction
+    let mut db_con = db.get()?; // get connection
+    let db_tx = db_con.transaction()?; // start transaction so automatic rollback on error
     {
         let mut db_stmt = db_tx.prepare(COUNTRY_QUERY_STRING)?; // prepare bulk insert
         for country in countries
@@ -150,12 +150,12 @@ pub fn update_countries(http_client: &reqwest::blocking::Client, country_data_ur
 /// # Arguments
 /// - `http_client`: http client
 /// - `input_calendar_url`: calendar source URL
-/// - `db`: database connection
+/// - `db`: database connection pool
 /// - `archive_end_dt`: datetime when to archive ends, latest datetime to be considered for archiving
 ///
 /// # Returns
 /// - nothing or error
-pub fn update_events(http_client: &reqwest::blocking::Client, input_calendar_url: &str, db: &mut rusqlite::Connection, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> Result<(), UpdateEventsError>
+pub fn update_events(http_client: &reqwest::blocking::Client, input_calendar_url: &str, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> Result<(), UpdateEventsError>
 {
     const EVENT_QUERY_STRING: [&str; 3] = // query string for Event table
     [
@@ -163,7 +163,6 @@ pub fn update_events(http_client: &reqwest::blocking::Client, input_calendar_url
         "DELETE FROM Event WHERE ? < end_dt;", // delete all active events, meaning events newer than 1 week ago
         "INSERT OR REPLACE INTO Event (uid, summary, start_dt, end_dt, location, description) VALUES (?, ?, ?, ?, ?, ?)" // insert new events
     ];
-    let db_tx: rusqlite::Transaction; // database transaction so automatic rollback on error
     let event_db_empty: bool; // check if event database is empty
     let f: scaler::Formatter = scaler::Formatter::new().set_rounding(scaler::Rounding::Magnitude(0)).set_scaling(scaler::Scaling::None); // formatter for logging
     let input_calendar: icalendar::Calendar; // input calendar
@@ -178,7 +177,8 @@ pub fn update_events(http_client: &reqwest::blocking::Client, input_calendar_url
 
     log::info!("Updating event database...");
     let mut rows_affected: usize = 0; // number of rows affected
-    db_tx = db.transaction()?; // start transaction
+    let mut db_con = db.get()?; // get connection
+    let db_tx = db_con.transaction()?; // start transaction so automatic rollback on error
     {
         match db_tx.query_row(EVENT_QUERY_STRING[0], (), |_| Ok(())).optional()? // check if table is empty
         {
