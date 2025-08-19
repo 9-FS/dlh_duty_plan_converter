@@ -14,12 +14,12 @@ use crate::error::*;
 /// - calendar or error
 pub fn load_calendar(db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>) -> Result<icalendar::Calendar, LoadCalendarError>
 {
-    const LOAD_CALENDAR_QUERY_STRING: &str = "SELECT * FROM Event ORDER BY start_dt ASC;"; // query to load calendar from database
+    const LOAD_CALENDAR_QUERY: &str = "SELECT * FROM Event ORDER BY start_dt ASC;"; // query to load calendar from database
     let mut calendar: icalendar::Calendar = icalendar::Calendar::new(); // calendar to be returned
 
 
     let db_con = db.get()?; // get connection
-    let mut db_stmt = db_con.prepare(LOAD_CALENDAR_QUERY_STRING)?; // prepare query
+    let mut db_stmt = db_con.prepare(LOAD_CALENDAR_QUERY)?; // prepare query
     let events = db_stmt.query_map((), |row|
     {
         let mut event = icalendar::Event::new();

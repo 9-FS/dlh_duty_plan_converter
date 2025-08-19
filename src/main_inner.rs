@@ -34,10 +34,10 @@ pub fn main_inner(config: Config) -> Result<(), Error>
 
     loop
     {
-        let archive_end_dt: chrono::DateTime<chrono::Utc> = chrono::Utc::now() + config.ARCHIVE_END_RELATIVE; // when archive ends in this iteration, read clock once to have clear reference point for archiving per iteration
-
-
         log::info!("--------------------------------------------------");
+        let archive_end_dt: chrono::DateTime<chrono::Utc> = chrono::Utc::now() + config.ARCHIVE_END_RELATIVE; // when archive ends in this iteration, read clock once to have clear reference point for archiving per iteration
+        log::debug!("Archive end: {}", archive_end_dt.to_rfc3339());
+
         if let Err(e) = update_calendar(&http_client, config.INPUT_CALENDAR_URL.as_str(), config.OUTPUT_CALENDAR_FILEPATH.as_str(), &db, &archive_end_dt) // update calendar iteration
         {
             log::error!("Updating calendar failed with: {e}"); // log error

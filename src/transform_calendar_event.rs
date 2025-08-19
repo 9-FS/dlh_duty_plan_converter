@@ -298,11 +298,11 @@ pub fn transform_unknown(mut calendar_event: icalendar::Event, archive_end_dt: &
 /// - airport name
 fn lookup_iata(iata: String, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>) -> Option<IataLookupRow>
 {
-    const LOOKUP_IATA_QUERY_STRING: &str = "SELECT Airport.gps_code AS airport_gps_code, Airport.municipality AS airport_municipality, Country.name AS country_name, Airport.name AS airport_name FROM Airport JOIN Country ON Airport.iso_country = Country.code WHERE Airport.iata_code = ?;"; // query string for iata lookup
+    const LOOKUP_IATA_QUERY: &str = "SELECT Airport.gps_code AS airport_gps_code, Airport.municipality AS airport_municipality, Country.name AS country_name, Airport.name AS airport_name FROM Airport JOIN Country ON Airport.iso_country = Country.code WHERE Airport.iata_code = ?;"; // query string for iata lookup
 
 
     let db_con = db.get().ok()?; // get connection
-    return db_con.query_one(LOOKUP_IATA_QUERY_STRING, (iata,), |row| { Ok(IataLookupRow
+    return db_con.query_one(LOOKUP_IATA_QUERY, (iata,), |row| { Ok(IataLookupRow
     {
         airport_name: row.get("airport_name")?,
         airport_gps_code: row.get("airport_gps_code")?,
@@ -331,7 +331,7 @@ pub struct IataLookupRow
 /// - ICAO location or unchanged input value
 fn try_iata_to_icao(iata: String, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>) -> String
 {
-    const IATA_TO_ICAO_QUERY_STRING: &str = "SELECT gps_code FROM Airport WHERE iata_code = ?;"; // query string for iata to icao lookup
+    const IATA_TO_ICAO_QUERY: &str = "SELECT gps_code FROM Airport WHERE iata_code = ?;"; // query string for iata to icao lookup
 
 
     let db_con = match db.get() // get connection or fallback to return value unchanged
@@ -339,5 +339,5 @@ fn try_iata_to_icao(iata: String, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionM
         Ok(o) => o,
         Err(_) => {return iata;},
     };
-    return db_con.query_one(IATA_TO_ICAO_QUERY_STRING, (&iata,), |row| { row.get("gps_code")}).unwrap_or(iata); // if no icao location found: forward unchanged value
+    return db_con.query_one(IATA_TO_ICAO_QUERY, (&iata,), |row| { row.get("gps_code")}).unwrap_or(iata); // if no icao location found: forward unchanged value
 }

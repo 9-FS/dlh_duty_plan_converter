@@ -20,7 +20,7 @@ use crate::is_archived::*;
 /// - nothing or error
 pub fn update_airports(http_client: &reqwest::blocking::Client, airport_data_url: &str, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>) -> Result<(), UpdateAirportsError>
 {
-    const AIRPORT_QUERY_STRING: &str = "INSERT OR REPLACE INTO Airport (id, ident, type, name, latitude_deg, longitude_deg, elevation_ft, continent, iso_country, iso_region, municipality, scheduled_service, gps_code, iata_code, local_code, home_link, wikipedia_link, keywords) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"; // query string for Airport table
+    const AIRPORT_QUERY: &str = "INSERT OR REPLACE INTO Airport (id, ident, type, name, latitude_deg, longitude_deg, elevation_ft, continent, iso_country, iso_region, municipality, scheduled_service, gps_code, iata_code, local_code, home_link, wikipedia_link, keywords) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"; // query string for Airport table
     let mut airports: Vec<AirportDownloadResponse> = std::vec::Vec::new(); // all airports
     let f: scaler::Formatter = scaler::Formatter::new().set_rounding(scaler::Rounding::Magnitude(0)).set_scaling(scaler::Scaling::None); // formatter for logging
 
@@ -50,7 +50,7 @@ pub fn update_airports(http_client: &reqwest::blocking::Client, airport_data_url
     let mut db_con = db.get()?; // get connection
     let db_tx = db_con.transaction()?; // start transaction so automatic rollback on error
     {
-        let mut db_stmt = db_tx.prepare(AIRPORT_QUERY_STRING)?; // prepare bulk insert
+        let mut db_stmt = db_tx.prepare(AIRPORT_QUERY)?; // prepare bulk insert
         for airport in airports
         {
             rows_affected += db_stmt.execute(rusqlite::params! // bind parameters, count rows affected
@@ -95,7 +95,7 @@ pub fn update_airports(http_client: &reqwest::blocking::Client, airport_data_url
 /// - nothing or error
 pub fn update_countries(http_client: &reqwest::blocking::Client, country_data_url: &str, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>) -> Result<(), UpdateCountriesError>
 {
-    const COUNTRY_QUERY_STRING: &str = "INSERT OR REPLACE INTO Country (id, code, name, continent, wikipedia_link, keywords) VALUES (?, ?, ?, ?, ?, ?);"; // query string for Country table
+    const COUNTRY_QUERY: &str = "INSERT OR REPLACE INTO Country (id, code, name, continent, wikipedia_link, keywords) VALUES (?, ?, ?, ?, ?, ?);"; // query string for Country table
     let mut countries: Vec<CountryDownloadResponse> = std::vec::Vec::new(); // all countries
     let f: scaler::Formatter = scaler::Formatter::new().set_rounding(scaler::Rounding::Magnitude(0)).set_scaling(scaler::Scaling::None); // formatter for logging
 
@@ -123,7 +123,7 @@ pub fn update_countries(http_client: &reqwest::blocking::Client, country_data_ur
     let mut db_con = db.get()?; // get connection
     let db_tx = db_con.transaction()?; // start transaction so automatic rollback on error
     {
-        let mut db_stmt = db_tx.prepare(COUNTRY_QUERY_STRING)?; // prepare bulk insert
+        let mut db_stmt = db_tx.prepare(COUNTRY_QUERY)?; // prepare bulk insert
         for country in countries
         {
             rows_affected += db_stmt.execute( // bind parameters, count rows affected
@@ -157,11 +157,11 @@ pub fn update_countries(http_client: &reqwest::blocking::Client, country_data_ur
 /// - nothing or error
 pub fn update_events(http_client: &reqwest::blocking::Client, input_calendar_url: &str, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> Result<(), UpdateEventsError>
 {
-    const EVENT_QUERY_STRING: [&str; 3] = // query string for Event table
+    const EVENT_QUERY: [&str; 3] = // query string for Event table
     [
         "SELECT * FROM Event;", // check if table is empty or not
-        "DELETE FROM Event WHERE ? < end_dt;", // delete all active events, meaning events newer than 1 week ago
-        "INSERT OR REPLACE INTO Event (uid, summary, start_dt, end_dt, location, description) VALUES (?, ?, ?, ?, ?, ?)" // insert new events
+        "DELETE FROM Event WHERE ? < end_dt;", // delete all active events, meaning events newer than end of archive
+        "INSERT OR REPLACE INTO Event (uid, summary, start_dt, end_dt, location, description) VALUES (?, ?, ?, ?, ?, ?);" // insert new events
     ];
     let event_db_empty: bool; // check if event database is empty
     let f: scaler::Formatter = scaler::Formatter::new().set_rounding(scaler::Rounding::Magnitude(0)).set_scaling(scaler::Scaling::None); // formatter for logging
@@ -176,11 +176,11 @@ pub fn update_events(http_client: &reqwest::blocking::Client, input_calendar_url
 
 
     log::info!("Updating event database...");
-    let mut rows_affected: usize = 0; // number of rows affected
+    let mut rows_affected;
     let mut db_con = db.get()?; // get connection
     let db_tx = db_con.transaction()?; // start transaction so automatic rollback on error
     {
-        match db_tx.query_row(EVENT_QUERY_STRING[0], (), |_| Ok(())).optional()? // check if table is empty
+        match db_tx.query_row(EVENT_QUERY[0], (), |_| Ok(())).optional()? // check if table is empty
         {
             Some(_) => // table is not empty
             {
@@ -196,15 +196,14 @@ pub fn update_events(http_client: &reqwest::blocking::Client, input_calendar_url
 
         if !event_db_empty // if table not empty: delete all active events before inserting new ones
         {
-            rows_affected += db_tx.execute(EVENT_QUERY_STRING[1], (archive_end_dt,))?; // delete all active events, meaning events newer than archive_end_dt
+            rows_affected = db_tx.execute(EVENT_QUERY[1], (archive_end_dt.to_rfc3339(),))?; // delete all active events, meaning events newer than archive_end_dt, must convert to iso8601 because it does not contain space and default trait conversion contains space which is apparently not properly escaped in rusqlite
             log::debug!("Deleted all active events from event database. Rows affected: {}", f.format(rows_affected as f64));
         }
 
 
         rows_affected = 0; // reset rows affected
-        let mut db_stmt = db_tx.prepare(EVENT_QUERY_STRING[2])?; // prepare bulk insert
+        let mut db_stmt = db_tx.prepare(EVENT_QUERY[2])?; // prepare bulk insert
         let mut events_to_insert: Vec<EventRow> = Vec::new(); // events to insert in database later, filtered and transformed
-
         for event in input_calendar.iter().filter_map(|component| component.as_event().or_else(|| {log::warn!("Component \"{:?}\" is not an event. Discarding component.", component); None})) // filter out all components that are not events
         {
             let end_str: String;
