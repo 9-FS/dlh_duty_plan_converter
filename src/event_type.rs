@@ -34,12 +34,12 @@ impl EventType
         const BRIEFING_PATTERN: &str = r"^(\d{2}:\d{2} LT Briefing [A-Z]{3})$";
         const DEADHEAD_PATTERN: &str = r"^(DH (?P<flight_iata>[\dA-Z][A-Z] \d{1,4}): (?P<departure_iata>[A-Z]{3})-(?P<destination_iata>[A-Z]{3}))$";
         const FLIGHT_PATTERN: &str = r"^((?P<flight_iata>[\dA-Z][A-Z] \d{1,4}): (?P<departure_iata>[A-Z]{3})-(?P<destination_iata>[A-Z]{3}))$";
-        const GROUND_PATTERN: &str = r"^((?P<category>GeneralEvent|Mandatory Training|Office Day|Simulator) \((?P<description>.+)\))$";
+        const GROUND_PATTERN: &str = r"^((?P<category>GeneralEvent|Mandatory Training|Medical Event|Office Day|Simulator) \((?P<description>.+)\))$";
         const HOLIDAY_PATTERN: &str = r"^(Absence \(.+\))$";
         const LAYOVER_PATTERN: &str = r"^(LAYOVER)$";
         const OFF_PATTERN: &str = r"^(Off Day \(.+\))$";
         const PICKUP_PATTERN: &str = r"^(\d{2}:\d{2} LT Pickup [A-Z]{3})$";
-        const RESERVE_PATTERN: &str = r"^(Reserve \((?P<description>.+)\))$";
+        const RESERVE_PATTERN: &str = r"^((Reserve|StandBy) \((?P<description>RES|REP|SB)\))$";
         const SICKNESS_PATTERN: &str = r"^(Sickness \(K(O)?\))$";
 
 
@@ -60,7 +60,8 @@ impl EventType
             let category_mapping: std::collections::HashMap<&str, &str> = std::collections::HashMap::from
             ([
                 ("GeneralEvent", ""), // unnecessary, no information value with this
-                ("Mandatory Training", "Training")
+                ("Mandatory Training", "Training"),
+                ("Medical Event", "Medical")
             ]); // map categories to shorter and prettier versions, if not in here forward category unchanged
             return Self::Ground {category: category_mapping.get(&captures["category"]).unwrap_or(&&captures["category"]).to_string(), description: captures["description"].to_owned()};
         }

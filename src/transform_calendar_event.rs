@@ -184,7 +184,7 @@ pub fn transform_off(mut calendar_event: icalendar::Event, archive_end_dt: &chro
 
 
 /// # Summary
-/// Transforms the pickup event. Additionally to the minimum actions changes summary to "Pickup", changes IATA location to ICAO location, and adds alarms at -1 h and -15 min.
+/// Transforms the pickup event. Additionally to the minimum actions changes summary to "Pickup", changes IATA location to ICAO location, and adds alarms at -1 h, -15 min, and -1 min.
 ///
 /// # Arguments
 /// - `calendar_event`: the calendar event to transform
@@ -203,6 +203,7 @@ pub fn transform_pickup(mut calendar_event: icalendar::Event, db: &r2d2::Pool<r2
     } // otherwise just keep original data
     calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::hours(-1))); // add alarm at -1 h
     calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-15))); // add alarm at -15 min
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-1))); // add alarm at -1 min
 
     return calendar_event;
 }
@@ -222,7 +223,14 @@ pub fn transform_pickup(mut calendar_event: icalendar::Event, db: &r2d2::Pool<r2
 pub fn transform_reserve(mut calendar_event: icalendar::Event, description: String, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>, archive_end_dt: &chrono::DateTime<chrono::Utc>) -> icalendar::Event
 {
     calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
-    calendar_event.summary(format!("{description}").as_str()); // change summary format
+    match description.as_str() // change summary format
+    {
+        "REP" => {calendar_event.summary("Reserve Pattern");},
+        "RES" => {calendar_event.summary("Reserve Standby");},
+        "SB" => {calendar_event.summary("Standby");},
+        _ => {panic!("Reserve event's description has invalid value \"{description}\" even though `RESERVE_PATTERN` should prevent this.");},
+    }
+
     if let Some(row) = lookup_iata(calendar_event.get_location().unwrap_or_default().to_owned(), db) // if iata location found
     {
         calendar_event.location(format!("{}, {}", row.country_name, row.airport_municipality).as_str()); // change iata location to country and city
