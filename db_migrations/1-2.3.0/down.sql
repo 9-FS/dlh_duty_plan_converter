@@ -1,0 +1,3 @@
+DROP TABLE Airport;
+DROP TABLE Country;
+DROP TABLE Event;

@@ -7,13 +7,14 @@ use crate::error::*;
 ///
 /// # Arguments
 /// - `db_url`: url to database file, might not be local but is recommended to be so
+/// - `db_migrations_dir`: directory containing the commands to migrate between database versions
+/// - `db_migrations_version`: version to migrate to
 ///
 /// # Returns
 /// - database connection pool or error
-pub fn connect_to_db(db_url: &str) -> Result<r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>, ConnectToDbError>
+pub fn connect_to_db(db_url: &str, db_migrations_dir: &'static include_dir::Dir<'static>, db_migrations_version: usize) -> Result<r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>, ConnectToDbError>
 {
-    static MIGRATIONS_DIR: include_dir::Dir = include_dir::include_dir!("./db_migrations/");
-    let migrations: rusqlite_migration::Migrations<'static> = rusqlite_migration::Migrations::from_directory(&MIGRATIONS_DIR).unwrap();
+    let migrations: rusqlite_migration::Migrations = rusqlite_migration::Migrations::from_directory(db_migrations_dir).unwrap();
     let db: r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>; // database connection
 
 
@@ -40,9 +41,8 @@ pub fn connect_to_db(db_url: &str) -> Result<r2d2::Pool<r2d2_sqlite::SqliteConne
     }
 
 
-    let mut db_con = db.get()?;
-    migrations.to_latest(&mut db_con)?; // run migrations to create and update tables
-    log::debug!("Executed migrations at \"./db_migrations/\".");
+    let mut db_con = db.get()?; // get connection
+    migrations.to_version(&mut db_con, db_migrations_version)?; // run migrations to specified version to create and update tables
 
     return Ok(db);
 }

@@ -10,7 +10,9 @@ pub fn main_inner(config: Config) -> Result<(), Error>
 {
     const AIRPORT_DATA_URL: &str = "https://ourairports.com/data/airports.csv"; // airport data online
     const COUNTRY_DATA_URL: &str = "https://ourairports.com/data/countries.csv"; // country data online
-    const DB_FILEPATH: &str = "./db/db.sqlite"; // database filepath
+    const DB_URL: &str = "./db/db.sqlite"; // database url, usually local filepath
+    const DB_MIGRATIONS_DIR: include_dir::Dir = include_dir::include_dir!("./db_migrations/"); // database migrations directory
+    const DB_MIGRATIONS_VERSION: usize = 1;
     const HTTP_TIMEOUT: u64 = 10; // connection timeout
     let db: r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>; // database connection pool
     let http_client: reqwest::blocking::Client; // http client
@@ -21,7 +23,7 @@ pub fn main_inner(config: Config) -> Result<(), Error>
         .timeout(Some(std::time::Duration::from_secs(HTTP_TIMEOUT)))
         .build()?;
 
-    db = connect_to_db(DB_FILEPATH)?; // connect to database
+    db = connect_to_db(DB_URL, &DB_MIGRATIONS_DIR, DB_MIGRATIONS_VERSION)?; // connect to database
     if let Err(e) = update_airports(&http_client, AIRPORT_DATA_URL, &db) // download airport data, parse csv, update database
     {
         log::warn!("Updating airport database failed with: {e}\nContinuing with potentially outdated data.");
