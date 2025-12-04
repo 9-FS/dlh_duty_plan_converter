@@ -22,7 +22,6 @@ pub fn main_inner(config: Config) -> Result<(), Error>
         .danger_accept_invalid_certs(true) // accept invalid certificates from ourairports.com
         .timeout(Some(std::time::Duration::from_secs(HTTP_TIMEOUT)))
         .build()?;
-
     db = connect_to_db(DB_URL, &DB_MIGRATIONS_DIR, DB_MIGRATIONS_VERSION)?; // connect to database
     if let Err(e) = update_airports(&http_client, AIRPORT_DATA_URL, &db) // download airport data, parse csv, update database
     {
