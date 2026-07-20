@@ -31,31 +31,31 @@ impl EventType
     /// - the determined event type or `DutyPlanEvent::Default` if the event type could not be determined
     pub fn determine_event_type(calendar_event_summary: String) -> Self
     {
-        const BRIEFING_PATTERN: &str = r"^(\d{2}:\d{2} LT Briefing [A-Z]{3})$";
+        const BRIEFING_PATTERN: &str = r"^(\d{2}:\d{2} LT BRIEFING [A-Z]{3})$";
         const DEADHEAD_PATTERN: &str = r"^(DH (?P<flight_iata>[\dA-Z][A-Z] \d{1,4}): (?P<departure_iata>[A-Z]{3})-(?P<destination_iata>[A-Z]{3}))$";
         const FLIGHT_PATTERN: &str = r"^((?P<flight_iata>[\dA-Z][A-Z] \d{1,4}): (?P<departure_iata>[A-Z]{3})-(?P<destination_iata>[A-Z]{3}))$";
-        const GROUND_PATTERN: &str = r"^((?P<category>GeneralEvent|Mandatory Training|Medical Event|Office Day|Simulator) \((?P<description>.+)\))$";
-        const HOLIDAY_PATTERN: &str = r"^(Absence \(.+\))$";
-        const LAYOVER_PATTERN: &str = r"^(LAYOVER)$";
-        const OFF_PATTERN: &str = r"^(Off Day \(.+\))$";
-        const PICKUP_PATTERN: &str = r"^(\d{2}:\d{2} LT Pickup [A-Z]{3})$";
-        const RESERVE_PATTERN: &str = r"^((Reserve|StandBy) \((?P<description>RES|REP|SB)\))$";
-        const SICKNESS_PATTERN: &str = r"^(Sickness \(K(O)?\))$";
+        const GROUND_PATTERN: &str = r"^((?P<category>GENERALEVENT|MANDATORY TRAINING|MEDICAL EVENT|OFFICE DAY|SIMULATOR) \((?P<description>.+)\))$";
+        const HOLIDAY_PATTERN: &str = r"^(ABSENCE \(.+\))$";
+        const LAYOVER_PATTERN: &str = r"^(LAYOVER( \[[A-Z]{3}\])?)$";
+        const OFF_PATTERN: &str = r"^(OFF DAY \(.+\))$";
+        const PICKUP_PATTERN: &str = r"^(\d{2}:\d{2} LT PICKUP [A-Z]{3})$";
+        const RESERVE_PATTERN: &str = r"^((RESERVE|STANDBY) \((?P<description>RB(_[0-9]+)?|RES|REP|SB(_[A-Z_]+)?)\))$";
+        const SICKNESS_PATTERN: &str = r"^(SICKNESS \(K(O)?\))$";
 
 
-        if regex::Regex::new(BRIEFING_PATTERN).expect("Compiling briefing regex failed.").is_match(calendar_event_summary.as_str())
+        if regex::Regex::new(BRIEFING_PATTERN).expect("Compiling briefing regex failed.").is_match(calendar_event_summary.to_uppercase().as_str())
         {
             return Self::Briefing;
         }
-        else if let Some(captures) = regex::Regex::new(DEADHEAD_PATTERN).expect("Compiling deadhead regex failed.").captures(calendar_event_summary.as_str())
+        else if let Some(captures) = regex::Regex::new(DEADHEAD_PATTERN).expect("Compiling deadhead regex failed.").captures(calendar_event_summary.to_uppercase().as_str())
         {
             return Self::Deadhead {flight_iata: captures["flight_iata"].replace(" ", ""), departure_iata: captures["departure_iata"].to_owned(), destination_iata: captures["destination_iata"].to_owned()}; // remove spaces from flight number
         }
-        else if let Some(captures) = regex::Regex::new(FLIGHT_PATTERN).expect("Compiling flight regex failed.").captures(calendar_event_summary.as_str())
+        else if let Some(captures) = regex::Regex::new(FLIGHT_PATTERN).expect("Compiling flight regex failed.").captures(calendar_event_summary.to_uppercase().as_str())
         {
             return Self::Flight {flight_iata: captures["flight_iata"].replace(" ", ""), departure_iata: captures["departure_iata"].to_owned(), destination_iata: captures["destination_iata"].to_owned()}; // remove spaces from flight number
         }
-        else if let Some(captures) = regex::Regex::new(GROUND_PATTERN).expect("Compiling ground regex failed.").captures(calendar_event_summary.as_str())
+        else if let Some(captures) = regex::Regex::new(GROUND_PATTERN).expect("Compiling ground regex failed.").captures(calendar_event_summary.to_uppercase().as_str())
         {
             let category_mapping: std::collections::HashMap<&str, &str> = std::collections::HashMap::from
             ([
@@ -65,27 +65,27 @@ impl EventType
             ]); // map categories to shorter and prettier versions, if not in here forward category unchanged
             return Self::Ground {category: category_mapping.get(&captures["category"]).unwrap_or(&&captures["category"]).to_string(), description: captures["description"].to_owned()};
         }
-        else if regex::Regex::new(HOLIDAY_PATTERN).expect("Compiling holiday regex failed.").is_match(calendar_event_summary.as_str())
+        else if regex::Regex::new(HOLIDAY_PATTERN).expect("Compiling holiday regex failed.").is_match(calendar_event_summary.to_uppercase().as_str())
         {
             return Self::Holiday;
         }
-        else if regex::Regex::new(LAYOVER_PATTERN).expect("Compiling layover regex failed.").is_match(calendar_event_summary.as_str())
+        else if regex::Regex::new(LAYOVER_PATTERN).expect("Compiling layover regex failed.").is_match(calendar_event_summary.to_uppercase().as_str())
         {
             return Self::Layover;
         }
-        else if regex::Regex::new(OFF_PATTERN).expect("Compiling off regex failed.").is_match(calendar_event_summary.as_str())
+        else if regex::Regex::new(OFF_PATTERN).expect("Compiling off regex failed.").is_match(calendar_event_summary.to_uppercase().as_str())
         {
             return Self::Off;
         }
-        else if regex::Regex::new(PICKUP_PATTERN).expect("Compiling pickup regex failed.").is_match(calendar_event_summary.as_str())
+        else if regex::Regex::new(PICKUP_PATTERN).expect("Compiling pickup regex failed.").is_match(calendar_event_summary.to_uppercase().as_str())
         {
             return Self::Pickup;
         }
-        else if let Some(captures) = regex::Regex::new(RESERVE_PATTERN).expect("Compiling pickup regex failed.").captures(calendar_event_summary.as_str())
+        else if let Some(captures) = regex::Regex::new(RESERVE_PATTERN).expect("Compiling pickup regex failed.").captures(calendar_event_summary.to_uppercase().as_str())
         {
             return Self::Reserve {description: captures["description"].to_owned()};
         }
-        else if regex::Regex::new(SICKNESS_PATTERN).expect("Compiling sickness regex failed.").is_match(calendar_event_summary.as_str())
+        else if regex::Regex::new(SICKNESS_PATTERN).expect("Compiling sickness regex failed.").is_match(calendar_event_summary.to_uppercase().as_str())
         {
             return Self::Sickness;
         }

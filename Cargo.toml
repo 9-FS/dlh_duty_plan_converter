@@ -9,7 +9,7 @@ license     = "MIT"
 name        = "dlh_duty_plan_converter"
 readme      = "readme.md"
 repository  = "https://github.com/9-FS/dlh_duty_plan_converter"
-version     = "2.6.0"
+version     = "2.7.0"
 
 [dependencies]
 chrono = { version = "^0.4.0", default-features = false, features = ["serde"] }
@@ -23,14 +23,14 @@ load_config = { git = "https://github.com/9-FS/load_config", tag = "1.2.1", feat
 ] }
 log = "^0.4.0"
 r2d2 = "^0.8.0"
-r2d2_sqlite = "^0.31.0"
+r2d2_sqlite = "^0.34.0"
 rayon = "^1.0.0"
 regex = "^1.0.0"
-reqwest = { version = "^0.12.0", default-features = false, features = [
+reqwest = { version = "^0.13.0", default-features = false, features = [
     "blocking",
-    "rustls-tls",
+    "rustls",
 ] }
-rusqlite = { version = "^0.37.0", features = ["bundled", "chrono"] }
+rusqlite = { version = "^0.39.0", features = ["bundled", "chrono"] }
 rusqlite_migration = { version = "^2.0.0", features = ["from-directory"] }
 scaler = "^1.0.0"
 serde = { version = "^1.0.0", features = ["derive"] }

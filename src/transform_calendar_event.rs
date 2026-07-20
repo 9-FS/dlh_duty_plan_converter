@@ -225,9 +225,10 @@ pub fn transform_reserve(mut calendar_event: icalendar::Event, description: Stri
     calendar_event = transform_unknown(calendar_event, archive_end_dt); // always do minimum before specific actions
     match description.as_str() // change summary format
     {
+        _ if description.starts_with("RB") => {calendar_event.summary("On Call");},
         "REP" => {calendar_event.summary("Reserve Pattern");},
         "RES" => {calendar_event.summary("Reserve Standby");},
-        "SB" => {calendar_event.summary("Standby");},
+        _ if description.starts_with("SB") => {calendar_event.summary("Standby");},
         _ => {panic!("Reserve event's description has invalid value \"{description}\" even though `RESERVE_PATTERN` should prevent this.");},
     }
 
