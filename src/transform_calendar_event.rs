@@ -347,5 +347,5 @@ fn try_iata_to_icao(iata: String, db: &r2d2::Pool<r2d2_sqlite::SqliteConnectionM
         Ok(o) => o,
         Err(_) => {return iata;},
     };
-    return db_con.query_one(IATA_TO_ICAO_QUERY, (&iata,), |row| { row.get("gps_code")}).unwrap_or(iata); // if no icao location found: forward unchanged value
+    return db_con.query_one(IATA_TO_ICAO_QUERY, (&iata,), |row| {row.get("gps_code")}).unwrap_or(iata); // if no icao location found: forward unchanged value
 }
