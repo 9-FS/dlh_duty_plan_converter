@@ -88,7 +88,7 @@ pub fn transform_flight(mut calendar_event: icalendar::Event, flight_iata: Strin
             calendar_event.location(format!("{}: {}, {}", s, row.country_name, row.airport_name).as_str()); // change iata location to icao location
         }
     } // otherwise just keep original data
-    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-30))); // add alarm at -30 min
+    calendar_event.alarm(icalendar::Alarm::display(calendar_event.get_summary().unwrap_or_default(), chrono::Duration::minutes(-35))); // add alarm at -35 min
 
     return calendar_event;
 }
